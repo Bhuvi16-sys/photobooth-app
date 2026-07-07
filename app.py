@@ -1530,7 +1530,7 @@ st.markdown(f"""
             <a href="mailto:support@photobooth.ai" class="footer-link-item">
                 <span class="footer-icon">📧</span> Email
             </a>
-            <a href="https://github.com" target="_blank" class="footer-link-item">
+            <a href="https://github.com/Bhuvi16-sys/photobooth-app.git" target="_blank" class="footer-link-item">
                 <span class="footer-icon">💻</span> GitHub
             </a>
         </div>
