@@ -1,0 +1,4 @@
+streamlit
+requests
+azure-storage-blob
+python-dotenv
