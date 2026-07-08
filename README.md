@@ -27,6 +27,7 @@ It offers an attractive glassmorphism design system, dynamic theme toggling, cen
 4.  **Display & Output**: View interactive face results in the insights columns and click the **Download Results** button to save a text analysis package.
 
 ---
+<img width="1600" height="900" alt="image" src="https://github.com/user-attachments/assets/5c7684d4-e3b6-4fa6-8064-119daf17b42d" />
 
 ## 🚀 Setup & Installation
 
