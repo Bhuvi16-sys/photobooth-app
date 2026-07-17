@@ -1286,164 +1286,276 @@ if theme_clicked:
     st.session_state.theme = "light" if st.session_state.theme == "dark" else "dark"
     st.rerun()
 
-# 1.5. WebGL Background Integration for Dark Theme
+# 1.5. WebGL Background Integration (Cloudscape in Light theme, Chromatic Fluid in Dark theme)
 is_dark_js = "true" if theme == "dark" else "false"
 components.html(f"""
 <script>
 const parentDoc = window.parent.document;
-let canvas = parentDoc.getElementById("chromatic-fluid-bg");
+
+// Clean up old chromatic-fluid-bg canvas if it exists
+const oldCanvas = parentDoc.getElementById("chromatic-fluid-bg");
+if (oldCanvas) {{
+    oldCanvas.remove();
+}}
+
+let canvas = parentDoc.getElementById("theme-webgl-bg");
 const isDark = {is_dark_js};
 
-if (isDark) {{
-    if (!canvas) {{
-        canvas = parentDoc.createElement("canvas");
-        canvas.id = "chromatic-fluid-bg";
-        canvas.style.cssText = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -100; pointer-events: none; opacity: 0.18;";
-        parentDoc.body.appendChild(canvas);
-        
-        const gl = canvas.getContext("webgl", {{ antialias: true }});
-        if (gl) {{
-            const vertexShaderGLSL = `
-                attribute vec2 position;
-                varying vec2 vUv;
-                void main() {{
-                  vUv = (position + 1.0) * 0.5;
-                  gl_Position = vec4(position, 0.0, 1.0);
-                }}
-            `;
+if (!canvas) {{
+    canvas = parentDoc.createElement("canvas");
+    canvas.id = "theme-webgl-bg";
+    canvas.style.cssText = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -100; pointer-events: none;";
+    parentDoc.body.appendChild(canvas);
+}}
 
-            const fragmentShaderGLSL = `
-                precision highp float;
-                uniform vec2 u_resolution;
-                uniform float u_time;
-                uniform float u_flowStrength;
-                uniform float u_grain;
-                uniform float u_contrast;
-                uniform float u_speed;
-                varying vec2 vUv;
+canvas.style.opacity = isDark ? "0.18" : "0.55";
 
-                float hash(vec2 p) {{
-                  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
-                }}
-
-                float noise(vec2 p) {{
-                  vec2 i = floor(p);
-                  vec2 f = fract(p);
-                  vec2 u = f * f * (3.0 - 2.0 * f);
-                  return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x),
-                             mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
-                }}
-
-                float fbm(vec2 p) {{
-                  float v = 0.0;
-                  float a = 0.5;
-                  mat2 rot = mat2(cos(0.5), sin(0.5), -sin(0.5), cos(0.5));
-                  for (int i = 0; i < 4; i++) {{ 
-                    v += a * noise(p);
-                    p = rot * p * 2.0;
-                    a *= 0.5;
-                  }}
-                  return v;
-                }}
-
-                void main() {{
-                  vec2 uv = vUv;
-                  float t = u_time * u_speed;
-                  vec2 p = (uv - 0.5) * vec2(u_resolution.x / u_resolution.y, 1.0) * 2.0;
-                  float baseNoise = fbm(p * 0.8 + t * 0.2);
-                  float fluid = fbm(p * 1.2 + baseNoise * u_flowStrength + t * 0.3);
-                  float eps = 0.01;
-                  float nx = fbm(p + vec2(eps, 0.0) + baseNoise * u_flowStrength + t * 0.3) - fluid;
-                  float ny = fbm(p + vec2(0.0, eps) + baseNoise * u_flowStrength + t * 0.3) - fluid;
-                  vec3 normal = normalize(vec3(nx, ny, eps * 1.5));
-                  vec3 lightDir = normalize(vec3(1.0, 1.0, 0.8)); 
-                  vec3 viewDir = vec3(0.0, 0.0, 1.0);
-                  vec3 halfVector = normalize(lightDir + viewDir);
-                  vec3 color = vec3(0.0); 
-                  float glintIntensity = 64.0; 
-                  float specR = pow(max(dot(normalize(vec3(nx + 0.005, ny, eps*1.5)), halfVector), 0.0), glintIntensity);
-                  float specG = pow(max(dot(normal, halfVector), 0.0), glintIntensity);
-                  float specB = pow(max(dot(normalize(vec3(nx - 0.005, ny, eps*1.5)), halfVector), 0.0), glintIntensity);
-                  vec3 specular = vec3(specR, specG, specB) * 1.5; 
-                  color += specular;
-                  color = mix(vec3(0.5), color, u_contrast);
-                  float vig = smoothstep(1.8, 0.2, length(uv - 0.5));
-                  color *= vig;
-                  float grainAmount = (hash(uv + t) - 0.5) * u_grain;
-                  color += grainAmount;
-                  gl_FragColor = vec4(clamp(color, 0.0, 1.0), 1.0);
-                }}
-            `;
-
-            const compile = (type, src) => {{
-              const s = gl.createShader(type);
-              gl.shaderSource(s, src);
-              gl.compileShader(s);
-              return s;
-            }};
-
-            const program = gl.createProgram();
-            gl.attachShader(program, compile(gl.VERTEX_SHADER, vertexShaderGLSL));
-            gl.attachShader(program, compile(gl.FRAGMENT_SHADER, fragmentShaderGLSL));
-            gl.linkProgram(program);
-            gl.useProgram(program);
-
-            const buffer = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
-            const pos = gl.getAttribLocation(program, "position");
-            gl.enableVertexAttribArray(pos);
-            gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
-
-            const locs = {{
-              res: gl.getUniformLocation(program, "u_resolution"),
-              time: gl.getUniformLocation(program, "u_time"),
-              flow: gl.getUniformLocation(program, "u_flowStrength"),
-              grain: gl.getUniformLocation(program, "u_grain"),
-              contrast: gl.getUniformLocation(program, "u_contrast"),
-              speed: gl.getUniformLocation(program, "u_speed"),
-            }};
-
-            const resize = () => {{
-              const dpr = Math.min(window.devicePixelRatio || 1, 2);
-              const width = window.innerWidth;
-              const height = window.innerHeight;
-              canvas.width = Math.max(1, Math.floor(width * dpr));
-              canvas.height = Math.max(1, Math.floor(height * dpr));
-              gl.viewport(0, 0, canvas.width, canvas.height);
-              gl.uniform2f(locs.res, canvas.width, canvas.height);
-            }};
-
-            window.addEventListener("resize", resize);
-            resize();
-
-            const flowStrength = 0.8;
-            const grain = 0.04;
-            const contrast = 1.1;
-            const speed = 0.4;
-
-            const startTime = performance.now();
-            const render = (now) => {{
-              if (!parentDoc.getElementById("chromatic-fluid-bg") || canvas.style.display === "none") {{
-                return;
-              }}
-              const elapsed = (now - startTime) / 1000;
-              gl.uniform1f(locs.time, elapsed);
-              gl.uniform1f(locs.flow, flowStrength);
-              gl.uniform1f(locs.grain, grain);
-              gl.uniform1f(locs.contrast, contrast);
-              gl.uniform1f(locs.speed, speed);
-              gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-              requestAnimationFrame(render);
-            }};
-            requestAnimationFrame(render);
-        }}
-    }} else {{
-        canvas.style.display = "block";
+const fluidVertex = `
+    attribute vec2 position;
+    varying vec2 vUv;
+    void main() {{
+      vUv = (position + 1.0) * 0.5;
+      gl_Position = vec4(position, 0.0, 1.0);
     }}
-}} else {{
-    if (canvas) {{
-        canvas.style.display = "none";
+`;
+
+const fluidFragment = `
+    precision highp float;
+    uniform vec2 u_resolution;
+    uniform float u_time;
+    uniform float u_flowStrength;
+    uniform float u_grain;
+    uniform float u_contrast;
+    uniform float u_speed;
+    varying vec2 vUv;
+
+    float hash(vec2 p) {{
+      return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+    }}
+
+    float noise(vec2 p) {{
+      vec2 i = floor(p);
+      vec2 f = fract(p);
+      vec2 u = f * f * (3.0 - 2.0 * f);
+      return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x),
+                 mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
+    }}
+
+    float fbm(vec2 p) {{
+      float v = 0.0;
+      float a = 0.5;
+      mat2 rot = mat2(cos(0.5), sin(0.5), -sin(0.5), cos(0.5));
+      for (int i = 0; i < 4; i++) {{ 
+        v += a * noise(p);
+        p = rot * p * 2.0;
+        a *= 0.5;
+      }}
+      return v;
+    }}
+
+    void main() {{
+      vec2 uv = vUv;
+      float t = u_time * u_speed;
+      vec2 p = (uv - 0.5) * vec2(u_resolution.x / u_resolution.y, 1.0) * 2.0;
+      float baseNoise = fbm(p * 0.8 + t * 0.2);
+      float fluid = fbm(p * 1.2 + baseNoise * u_flowStrength + t * 0.3);
+      float eps = 0.01;
+      float nx = fbm(p + vec2(eps, 0.0) + baseNoise * u_flowStrength + t * 0.3) - fluid;
+      float ny = fbm(p + vec2(0.0, eps) + baseNoise * u_flowStrength + t * 0.3) - fluid;
+      vec3 normal = normalize(vec3(nx, ny, eps * 1.5));
+      vec3 lightDir = normalize(vec3(1.0, 1.0, 0.8)); 
+      vec3 viewDir = vec3(0.0, 0.0, 1.0);
+      vec3 halfVector = normalize(lightDir + viewDir);
+      vec3 color = vec3(0.0); 
+      float glintIntensity = 64.0; 
+      float specR = pow(max(dot(normalize(vec3(nx + 0.005, ny, eps*1.5)), halfVector), 0.0), glintIntensity);
+      float specG = pow(max(dot(normal, halfVector), 0.0), glintIntensity);
+      float specB = pow(max(dot(normalize(vec3(nx - 0.005, ny, eps*1.5)), halfVector), 0.0), glintIntensity);
+      vec3 specular = vec3(specR, specG, specB) * 1.5; 
+      color += specular;
+      color = mix(vec3(0.5), color, u_contrast);
+      float vig = smoothstep(1.8, 0.2, length(uv - 0.5));
+      color *= vig;
+      float grainAmount = (hash(uv + t) - 0.5) * u_grain;
+      color += grainAmount;
+      gl_FragColor = vec4(clamp(color, 0.0, 1.0), 1.0);
+    }}
+`;
+
+const cloudVertex = `
+    attribute vec2 position;
+    void main() {{
+      gl_Position = vec4(position, 0.0, 1.0);
+    }}
+`;
+
+const cloudFragment = `
+    precision highp float;
+    uniform vec2 u_resolution;
+    uniform float u_time;
+    uniform vec3 u_colorBottom;
+    uniform vec3 u_colorMid;
+    uniform vec3 u_colorTop;
+    uniform float u_speed;
+
+    float hash(vec2 p) {{
+      return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+    }}
+
+    float noise(vec2 p) {{
+      vec2 i = floor(p);
+      vec2 f = fract(p);
+      float a = hash(i);
+      float b = hash(i + vec2(1.0, 0.0));
+      float c = hash(i + vec2(0.0, 1.0));
+      float d = hash(i + vec2(1.0, 1.0));
+      vec2 u = f * f * (3.0 - 2.0 * f);
+      return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+    }}
+
+    float fbm(vec2 p, float t) {{
+      float v = 0.0;
+      float a = 0.5;
+      float fi = 0.0;
+      mat2 rot = mat2(0.86, 0.51, -0.51, 0.86);
+      for (int i = 0; i < 6; i++) {{
+        vec2 morph = vec2(sin(t * 0.5 + fi), cos(t * 0.3 - fi)) * 0.05;
+        v += a * noise(p + morph);
+        p = rot * p * 2.0;
+        a *= 0.5;
+        fi += 1.0;
+      }}
+      return v;
+    }}
+
+    void main() {{
+      vec2 uv = gl_FragCoord.xy / u_resolution;
+      float t = u_time * u_speed;
+      vec2 aspect = vec2(u_resolution.x / max(u_resolution.y, 1.0), 1.0);
+      vec2 p = (uv - 0.5) * aspect;
+      vec2 wind = vec2(t * 0.1, t * 0.02);
+      float pattern = fbm(p * 2.2 - wind, t);
+      float bandLow = smoothstep(0.3, 0.65, pattern);
+      float bandHigh = smoothstep(0.7, 0.95, pattern); 
+      vec3 color = mix(u_colorBottom, u_colorMid, bandLow);
+      color = mix(color, u_colorTop, bandHigh);
+      gl_FragColor = vec4(color, 1.0);
+    }}
+`;
+
+const activeTheme = isDark ? "dark" : "light";
+if (parentDoc.webgl_active_theme !== activeTheme) {{
+    parentDoc.webgl_active_theme = activeTheme;
+    
+    // Stop any existing render loop
+    if (parentDoc.webgl_frame_id) {{
+        cancelAnimationFrame(parentDoc.webgl_frame_id);
+    }}
+    
+    // Fetch WebGL Context
+    const gl = canvas.getContext("webgl", {{ antialias: true, alpha: true }});
+    if (gl) {{
+        // Delete previous program and buffers to prevent leaks
+        if (parentDoc.webgl_program) {{
+            gl.deleteProgram(parentDoc.webgl_program);
+        }}
+        if (parentDoc.webgl_buffer) {{
+            gl.deleteBuffer(parentDoc.webgl_buffer);
+        }}
+        
+        const compile = (type, src) => {{
+            const s = gl.createShader(type);
+            gl.shaderSource(s, src);
+            gl.compileShader(s);
+            return s;
+        }};
+        
+        const vSrc = isDark ? fluidVertex : cloudVertex;
+        const fSrc = isDark ? fluidFragment : cloudFragment;
+        
+        const program = gl.createProgram();
+        gl.attachShader(program, compile(gl.VERTEX_SHADER, vSrc));
+        gl.attachShader(program, compile(gl.FRAGMENT_SHADER, fSrc));
+        gl.linkProgram(program);
+        gl.useProgram(program);
+        
+        parentDoc.webgl_program = program;
+        
+        const buffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+        
+        parentDoc.webgl_buffer = buffer;
+        
+        const pos = gl.getAttribLocation(program, "position");
+        gl.enableVertexAttribArray(pos);
+        gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
+        
+        const locs = isDark ? {{
+            res: gl.getUniformLocation(program, "u_resolution"),
+            time: gl.getUniformLocation(program, "u_time"),
+            flow: gl.getUniformLocation(program, "u_flowStrength"),
+            grain: gl.getUniformLocation(program, "u_grain"),
+            contrast: gl.getUniformLocation(program, "u_contrast"),
+            speed: gl.getUniformLocation(program, "u_speed"),
+        }} : {{
+            res: gl.getUniformLocation(program, "u_resolution"),
+            time: gl.getUniformLocation(program, "u_time"),
+            colorBottom: gl.getUniformLocation(program, "u_colorBottom"),
+            colorMid: gl.getUniformLocation(program, "u_colorMid"),
+            colorTop: gl.getUniformLocation(program, "u_colorTop"),
+            speed: gl.getUniformLocation(program, "u_speed"),
+        }};
+        
+        const resize = () => {{
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            canvas.width = Math.max(1, Math.floor(width * dpr));
+            canvas.height = Math.max(1, Math.floor(height * dpr));
+            gl.viewport(0, 0, canvas.width, canvas.height);
+            gl.uniform2f(locs.res, canvas.width, canvas.height);
+        }};
+        
+        window.addEventListener("resize", resize);
+        resize();
+        
+        // Colors for Cloudscape (Normalized 0.0 - 1.0)
+        // bottom: #87ceeb (sky blue)
+        // mid: #f8f8f8 (light grey/white)
+        // top: #ffffff (white)
+        const cBottom = [0.529, 0.808, 0.922];
+        const cMid = [0.973, 0.973, 0.973];
+        const cTop = [1.0, 1.0, 1.0];
+        
+        const startTime = performance.now();
+        const render = (now) => {{
+            if (parentDoc.webgl_active_theme !== activeTheme || !parentDoc.getElementById("theme-webgl-bg")) {{
+                return;
+            }}
+            const elapsed = (now - startTime) / 1000;
+            
+            gl.clearColor(0, 0, 0, 0);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            
+            gl.uniform1f(locs.time, elapsed);
+            if (isDark) {{
+                gl.uniform1f(locs.flow, 0.8);
+                gl.uniform1f(locs.grain, 0.04);
+                gl.uniform1f(locs.contrast, 1.1);
+                gl.uniform1f(locs.speed, 0.4);
+            }} else {{
+                gl.uniform3f(locs.colorBottom, cBottom[0], cBottom[1], cBottom[2]);
+                gl.uniform3f(locs.colorMid, cMid[0], cMid[1], cMid[2]);
+                gl.uniform3f(locs.colorTop, cTop[0], cTop[1], cTop[2]);
+                gl.uniform1f(locs.speed, 0.5);
+            }}
+            
+            gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+            parentDoc.webgl_frame_id = requestAnimationFrame(render);
+        }};
+        
+        parentDoc.webgl_frame_id = requestAnimationFrame(render);
     }}
 }}
 </script>
