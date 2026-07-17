@@ -437,12 +437,13 @@ def predict_gated_attributes_with_deepface(image_bytes, face_idx, azure_rect, si
         age_orig = AGE_MIDPOINTS[preds_orig[0].argmax()]
         age_flipped = AGE_MIDPOINTS[preds_flipped[0].argmax()]
         
-        # Apply calibration offset (directly hardcoded to -8 years to compensate for model bias)
-        offset = -8
-        
-        # Calculate uncalibrated median and final calibrated median
+        # Apply calibration offset
+        # Calculate raw uncalibrated median and save it to session state for training/calibration
         raw_median = float(np.median([age_orig, age_flipped]))
-        age_val = max(1.0, raw_median + offset)
+        st.session_state.last_raw_median = raw_median
+        
+        # Get calibration offset from session state (defaults to -8 years)
+        global_offset = st.session_state.get("age_offset", -8)
         
         # 4. Generate visual feature vector (3D Color Histogram) for identity smoothing
         hist = cv2.calcHist([img_normalized], [0, 1, 2], None, [8, 8, 8], [0, 256, 0, 256, 0, 256])
@@ -467,6 +468,15 @@ def predict_gated_attributes_with_deepface(image_bytes, face_idx, azure_rect, si
                 max_sim = sim
                 best_match = entry
                 
+        # Retrieve personal offset if trained, otherwise global offset
+        offset = global_offset
+        if max_sim > 0.75 and best_match is not None:
+            if best_match.get("personal_offset") is not None:
+                offset = best_match["personal_offset"]
+                
+        # Apply offset and clamp
+        age_val = max(1.0, raw_median + offset)
+        
         # For histogram vectors, 0.75+ is a high similarity match
         if max_sim > 0.75 and best_match is not None:
             best_match["age_history"].append(age_val)
@@ -477,7 +487,8 @@ def predict_gated_attributes_with_deepface(image_bytes, face_idx, azure_rect, si
         else:
             st.session_state.face_identity_cache.append({
                 "embedding": feature_vector,
-                "age_history": [age_val]
+                "age_history": [age_val],
+                "personal_offset": None
             })
             final_age = age_val
             smoothed_count = 1
@@ -1155,7 +1166,34 @@ div.stDownloadButton > button:hover {{
 </style>
 """, unsafe_allow_html=True)
 
-# No sidebar calibration slider active (offset managed directly in-code)
+# 0. Sidebar model training & calibration panel
+with st.sidebar:
+    st.markdown(f"""
+    <div style="padding: 10px 0; font-family: 'Outfit', sans-serif;">
+        <h3 style="margin: 0 0 10px 0; font-size: 24px; font-weight: 800; font-family: 'Space Grotesk', sans-serif; color: #8b5cf6;">🎯 TRAIN MODEL</h3>
+        <p style="margin: 0 0 15px 0; font-size: 16px; color: {text_sec}; line-height: 1.4;">
+            Is the estimate incorrect? Enter your actual age below to train the calibration offset specifically for your face.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    actual_age = st.number_input("Your Actual Age", min_value=1, max_value=100, value=25, key="actual_age_input")
+    
+    if st.button("Train Model for My Face"):
+        last_median = st.session_state.get("last_raw_median")
+        if last_median is not None:
+            # Compute custom calibration offset
+            custom_offset = int(actual_age - last_median)
+            st.session_state.age_offset = custom_offset
+            
+            # Apply to identity cache so the model remembers your face specifically
+            if st.session_state.get("face_identity_cache"):
+                st.session_state.face_identity_cache[-1]["personal_offset"] = custom_offset
+                
+            st.success(f"Model trained! Applied offset: {custom_offset:+} years.")
+            st.rerun()
+        else:
+            st.warning("Please upload and analyze a photo first before training the model!")
 
 # 1. Top Header Banner
 hcol1, hcol2 = st.columns([0.5, 0.5])
