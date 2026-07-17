@@ -1218,7 +1218,7 @@ with col1:
     # Render trigger button, preview image, and message banners directly below the uploader box
     if uploaded_file:
         # Display image preview
-        st.image(uploaded_file, use_column_width=True)
+        st.image(uploaded_file, use_column_width="always")
         
         st.markdown('<div style="margin-top: 16px; margin-bottom: 8px;">', unsafe_allow_html=True)
         st.button("Analyze my photo", on_click=run_analysis_callback)
