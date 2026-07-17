@@ -887,6 +887,49 @@ div.stDownloadButton > button:hover {{
     box-shadow: 0 0 15px rgba(99, 102, 241, 0.5) !important;
     transform: translateY(-1px);
 }}
+
+/* Responsive media query overrides for mobile/tablets */
+@media (max-width: 768px) {{
+    .pb-card {{
+        padding: 20px !important;
+        min-height: auto !important;
+    }}
+    .footer-content {{
+        flex-direction: column !important;
+        text-align: center !important;
+        justify-content: center !important;
+        gap: 16px !important;
+    }}
+    .footer-brand {{
+        flex-direction: column !important;
+        justify-content: center !important;
+        text-align: center !important;
+    }}
+    .footer-links {{
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 12px !important;
+    }}
+    .footer-bottom {{
+        flex-direction: column !important;
+        text-align: center !important;
+        gap: 8px !important;
+    }}
+}}
+
+@media (max-width: 600px) {{
+    h1 {{
+        font-size: 28px !important;
+    }}
+    .footer-title {{
+        font-size: 18px !important;
+    }}
+    .stats-container {{
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+    }}
+}}
 </style>
 """, unsafe_allow_html=True)
 
