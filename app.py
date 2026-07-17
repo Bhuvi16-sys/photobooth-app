@@ -80,6 +80,13 @@ if theme == "light":
     button_theme_border = "#cbd5e1"
     button_theme_color = "#475569"
     footer_sub_border = "rgba(15, 23, 42, 0.05)"
+    
+    # Glassmorphic Navbar variables for Light Mode
+    nav_bg = "rgba(15, 23, 42, 0.03)"
+    nav_border = "rgba(15, 23, 42, 0.08)"
+    nav_text_main = "#0f172a"
+    nav_text_sec = "#475569"
+    nav_shadow = "0 8px 32px 0 rgba(15, 23, 42, 0.08)"
 else:
     bg_app = "#090f1e" # Dark navy slate blue base
     bg_app_grad = "radial-gradient(circle at 0% 0%, rgba(6, 182, 212, 0.12), transparent 40%), radial-gradient(circle at 0% 100%, rgba(139, 92, 246, 0.15), transparent 45%)"
@@ -98,6 +105,13 @@ else:
     button_theme_border = "#1c223c"
     button_theme_color = "#cbd5e1"
     footer_sub_border = "rgba(255, 255, 255, 0.03)"
+    
+    # Glassmorphic Navbar variables for Dark Mode
+    nav_bg = "rgba(255, 255, 255, 0.02)"
+    nav_border = "rgba(255, 255, 255, 0.06)"
+    nav_text_main = "#ffffff"
+    nav_text_sec = "#94a3b8"
+    nav_shadow = "0 10px 40px 0 rgba(0, 0, 0, 0.25)"
 if "analyzed_photos" not in st.session_state:
     st.session_state.analyzed_photos = [
         # Mockup 1: Female portrait
@@ -1162,15 +1176,15 @@ div.stDownloadButton > button:hover {{
 
 /* Glassmorphic Navigation Bar Style Override */
 div[data-testid="stAppViewContainer"] div[data-testid="stHorizontalBlock"]:first-of-type {{
-    background: rgba(255, 255, 255, 0.02) !important;
+    background: {nav_bg} !important;
     backdrop-filter: blur(24px) !important;
     -webkit-backdrop-filter: blur(24px) !important;
-    border: 1.5px solid rgba(255, 255, 255, 0.06) !important;
+    border: 1.5px solid {nav_border} !important;
     border-radius: 20px !important;
     padding: 16px 28px !important;
     margin-top: 10px !important;
     margin-bottom: 30px !important;
-    box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.25) !important;
+    box-shadow: {nav_shadow} !important;
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
@@ -1229,8 +1243,8 @@ with hcol1:
             </svg>
         </div>
         <div style="display: flex; flex-direction: column; justify-content: center; line-height: 1.1; text-align: left;">
-            <span style="font-size: 13px; font-weight: 600; color: #94a3b8; font-family: 'Outfit', sans-serif; letter-spacing: 0.5px;">FlashPoint Pro</span>
-            <span style="font-size: 22px; font-weight: 800; color: #ffffff; font-family: 'Space Grotesk', sans-serif; letter-spacing: 1px; background: linear-gradient(135deg, #ffffff 60%, #cbd5e1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">PHOTOBOOTH</span>
+            <span style="font-size: 13px; font-weight: 600; color: {nav_text_sec}; font-family: 'Outfit', sans-serif; letter-spacing: 0.5px;">FlashPoint Pro</span>
+            <span style="font-size: 22px; font-weight: 800; color: {nav_text_main}; font-family: 'Space Grotesk', sans-serif; letter-spacing: 1px; background: linear-gradient(135deg, {nav_text_main} 60%, {nav_text_sec} 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">PHOTOBOOTH</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -1240,8 +1254,8 @@ with hcol2:
     <div style="display: flex; align-items: center; gap: 10px; height: 44px;">
         <div style="font-size: 20px; color: #10b981; filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.4));">🛡️</div>
         <div style="line-height: 1.2; text-align: left;">
-            <div style="font-size: 13px; font-weight: 600; color: #ffffff; font-family: 'Outfit', sans-serif;">Privacy</div>
-            <div style="font-size: 11px; color: #94a3b8; font-family: 'Outfit', sans-serif;">First</div>
+            <div style="font-size: 13px; font-weight: 600; color: {nav_text_main}; font-family: 'Outfit', sans-serif;">Privacy</div>
+            <div style="font-size: 11px; color: {nav_text_sec}; font-family: 'Outfit', sans-serif;">First</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -1251,8 +1265,8 @@ with hcol3:
     <div style="display: flex; align-items: center; gap: 10px; height: 44px;">
         <div style="font-size: 20px; color: #8b5cf6; filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.4));">⚡</div>
         <div style="line-height: 1.2; text-align: left;">
-            <div style="font-size: 13px; font-weight: 600; color: #ffffff; font-family: 'Outfit', sans-serif;">Real-time</div>
-            <div style="font-size: 11px; color: #94a3b8; font-family: 'Outfit', sans-serif;">Processing</div>
+            <div style="font-size: 13px; font-weight: 600; color: {nav_text_main}; font-family: 'Outfit', sans-serif;">Real-time</div>
+            <div style="font-size: 11px; color: {nav_text_sec}; font-family: 'Outfit', sans-serif;">Processing</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
