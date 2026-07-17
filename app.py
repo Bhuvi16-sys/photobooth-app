@@ -1326,7 +1326,8 @@ with col_left:
 <div class="panel-title-custom" style="font-size: 22px; color: #00f0ff; display: flex; align-items: center; gap: 8px; margin-bottom: 16px; font-weight: bold;">
 <span>📊</span> Session Summary
 </div>
-<div style="display: grid; grid-template-columns: 1.2fr 1.3fr 1.5fr; gap: 20px; align-items: center;">
+<div style="flex-grow: 1; display: flex; align-items: center; width: 100%;">
+<div style="display: grid; grid-template-columns: 1.2fr 1.3fr 1.5fr; gap: 20px; align-items: center; width: 100%;">
 <!-- Circle Dial Section -->
 <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; border-right: 1px solid {border_color}; padding-right: 15px;">
 <div style="position: relative; width: 100px; height: 100px; border-radius: 50%; background: conic-gradient(#8b5cf6 0% 70%, #06b6d4 70% 100%); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(139, 92, 246, 0.2);">
@@ -1356,9 +1357,6 @@ with col_left:
 <span style="color: {text_sec};">Avg Speed:</span>
 <span style="color: {text_main}; font-weight: bold;">0.01s</span>
 </div>
-<div style="display: flex; justify-content: space-between; font-size: 16px;">
-<span style="color: {text_sec};">Success Rate:</span>
-<span style="color: #10b981; font-weight: bold;">100%</span>
 </div>
 </div>
 </div>
