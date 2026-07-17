@@ -927,6 +927,18 @@ div.stDownloadButton > button:hover {{
         text-align: center !important;
         gap: 8px !important;
     }}
+    
+    /* Align header elements left on mobile when stacked */
+    .privacy-badge-container {{
+        margin-left: 0 !important;
+        margin-top: 10px !important;
+        justify-content: flex-start !important;
+        width: 100% !important;
+    }}
+    .theme-btn-wrapper {{
+        justify-content: flex-start !important;
+        margin-top: 8px !important;
+    }}
 }}
 
 @media (max-width: 600px) {{
@@ -940,6 +952,14 @@ div.stDownloadButton > button:hover {{
         grid-template-columns: 1fr !important;
         gap: 8px !important;
     }}
+    
+    /* Scale down privacy texts for small screens */
+    .privacy-title {{
+        font-size: 18px !important;
+    }}
+    .privacy-subtitle {{
+        font-size: 14px !important;
+    }}
 }}
 </style>
 """, unsafe_allow_html=True)
@@ -948,7 +968,7 @@ div.stDownloadButton > button:hover {{
 hcol1, hcol2 = st.columns([0.5, 0.5])
 with hcol1:
     st.markdown(f"""
-    <div style="display: flex; align-items: center; gap: 16px; height: 64px;">
+    <div style="display: flex; align-items: center; gap: 16px; min-height: 64px; height: auto; padding: 4px 0; flex-wrap: wrap;">
         <div style="font-size: 32px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(59, 130, 246, 0.15) 100%); border: 1.5px solid rgba(99, 102, 241, 0.3); padding: 8px 14px; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);">📸</div>
         <div>
             <h1 style="margin: 0; font-size: 38px; font-weight: 800; font-family: 'Space Grotesk', sans-serif; letter-spacing: 2px; color: #8b5cf6; line-height: 1.1;">PHOTOBOOTH</h1>
@@ -957,19 +977,19 @@ with hcol1:
     </div>
     """, unsafe_allow_html=True)
 with hcol2:
-    pcol1, pcol2 = st.columns([0.85, 0.15])
+    pcol1, pcol2 = st.columns([0.8, 0.2])
     with pcol1:
         st.markdown(f"""
-        <div style="background-color: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.15); padding: 6px 16px; border-radius: 8px; display: flex; align-items: center; gap: 10px; height: 54px; justify-content: flex-end; margin-left: auto; width: fit-content;">
+        <div class="privacy-badge-container" style="background-color: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.15); padding: 8px 16px; border-radius: 8px; display: flex; align-items: center; gap: 10px; min-height: 54px; height: auto; justify-content: flex-end; margin-left: auto; width: fit-content;">
             <div style="color: #8b5cf6; font-size: 13px;">🛡️</div>
             <div style="text-align: left; line-height: 1.2;">
-                <div style="font-size: 24px; font-weight: bold; color: {text_main};">Privacy First</div>
-                <div style="font-size: 20px; color: {text_sec};">No storage. No identification.</div>
+                <div class="privacy-title" style="font-size: 24px; font-weight: bold; color: {text_main};">Privacy First</div>
+                <div class="privacy-subtitle" style="font-size: 20px; color: {text_sec};">No storage. No identification.</div>
             </div>
         </div>
         """, unsafe_allow_html=True)
     with pcol2:
-        st.markdown('<div class="theme-btn-wrapper" style="display: flex; justify-content: flex-end; align-items: center; height: 54px;">', unsafe_allow_html=True)
+        st.markdown('<div class="theme-btn-wrapper" style="display: flex; justify-content: flex-end; align-items: center; min-height: 54px; height: auto; padding: 4px 0;">', unsafe_allow_html=True)
         theme_clicked = st.button(theme_icon, key="theme_toggle")
         st.markdown('</div>', unsafe_allow_html=True)
 
