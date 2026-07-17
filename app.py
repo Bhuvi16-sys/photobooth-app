@@ -5,11 +5,13 @@ import uuid
 import base64
 import json
 from dotenv import load_dotenv
+from pathlib import Path
 import random
 from azure.storage.blob import BlobServiceClient
 
-# Load environment variables
-load_dotenv()
+# Load environment variables relative to the script's directory
+env_path = Path(__file__).parent / ".env"
+load_dotenv(dotenv_path=env_path)
 
 FACE_ENDPOINT = os.getenv("FACE_API_ENDPOINT")
 FACE_KEY = os.getenv("FACE_API_KEY")
