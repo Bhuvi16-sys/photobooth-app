@@ -1174,6 +1174,11 @@ div.stDownloadButton > button:hover {{
     }}
 }}
 
+/* Remove default top padding from Streamlit main block container */
+div[data-testid="stAppViewContainer"] div.block-container {{
+    padding-top: 1.5rem !important;
+}}
+
 /* Glassmorphic Navigation Bar Style Override */
 div[data-testid="stAppViewContainer"] div[data-testid="stHorizontalBlock"]:first-of-type {{
     background: {nav_bg} !important;
@@ -1182,8 +1187,8 @@ div[data-testid="stAppViewContainer"] div[data-testid="stHorizontalBlock"]:first
     border: 1.5px solid {nav_border} !important;
     border-radius: 20px !important;
     padding: 16px 28px !important;
-    margin-top: 10px !important;
-    margin-bottom: 30px !important;
+    margin-top: 0px !important;
+    margin-bottom: 25px !important;
     box-shadow: {nav_shadow} !important;
     display: flex !important;
     align-items: center !important;
@@ -1244,7 +1249,7 @@ with hcol1:
         </div>
         <div style="display: flex; flex-direction: column; justify-content: center; line-height: 1.1; text-align: left;">
             <span style="font-size: 13px; font-weight: 600; color: {nav_text_sec}; font-family: 'Outfit', sans-serif; letter-spacing: 0.5px;">FlashPoint Pro</span>
-            <span style="font-size: 22px; font-weight: 800; color: {nav_text_main}; font-family: 'Space Grotesk', sans-serif; letter-spacing: 1px; background: linear-gradient(135deg, {nav_text_main} 60%, {nav_text_sec} 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">PHOTOBOOTH</span>
+            <span style="font-size: 22px; font-weight: 800; color: {nav_text_main}; font-family: 'Space Grotesk', sans-serif; letter-spacing: 1px;">PHOTOBOOTH</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
