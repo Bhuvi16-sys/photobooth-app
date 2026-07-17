@@ -1560,39 +1560,23 @@ def render_face_details(idx, face):
         pitch = hp.get("pitch", 0.0)
         yaw = hp.get("yaw", 0.0)
         roll = hp.get("roll", 0.0)
-        head_pose_html = f"""
-<table class="insight-table" style="margin-top: 4px;">
-    <tr>
-        <td class="lbl" style="font-size: 20px;">📦 Face Box</td>
-        <td class="val" style="font-size: 20px; color: #06b6d4;">{rect_html}</td>
-    </tr>
-    <tr>
-        <td class="lbl" style="font-size: 20px;">Pitch (Nod)</td>
-        <td class="val" style="font-size: 20px; color: #06b6d4;">{pitch:+.1f}°</td>
-    </tr>
-    <tr>
-        <td class="lbl" style="font-size: 20px;">Yaw (Turn)</td>
-        <td class="val" style="font-size: 20px; color: #06b6d4;">{yaw:+.1f}°</td>
-    </tr>
-    <tr>
-        <td class="lbl" style="font-size: 20px;">Roll (Tilt)</td>
-        <td class="val" style="font-size: 20px; color: #06b6d4; font-weight: bold;">{roll:+.1f}°</td>
-    </tr>
-</table>
-"""
+        head_pose_html = (
+            f'<table class="insight-table" style="margin-top: 4px;">'
+            f'<tr><td class="lbl" style="font-size: 20px;">📦 Face Box</td><td class="val" style="font-size: 20px; color: #06b6d4;">{rect_html}</td></tr>'
+            f'<tr><td class="lbl" style="font-size: 20px;">Pitch (Nod)</td><td class="val" style="font-size: 20px; color: #06b6d4;">{pitch:+.1f}°</td></tr>'
+            f'<tr><td class="lbl" style="font-size: 20px;">Yaw (Turn)</td><td class="val" style="font-size: 20px; color: #06b6d4;">{yaw:+.1f}°</td></tr>'
+            f'<tr><td class="lbl" style="font-size: 20px;">Roll (Tilt)</td><td class="val" style="font-size: 20px; color: #06b6d4; font-weight: bold;">{roll:+.1f}°</td></tr>'
+            f'</table>'
+        )
     else:
-        head_pose_html = f"""
-<table class="insight-table" style="margin-top: 4px;">
-    <tr>
-        <td class="lbl" style="font-size: 20px;">📦 Face Box</td>
-        <td class="val" style="font-size: 20px; color: #06b6d4;">{rect_html}</td>
-    </tr>
-</table>
-<div style="font-size: 20px; color: {text_sec}; font-style: italic; margin-top: 4px;">📐 Head pose restricted</div>
-"""
+        head_pose_html = (
+            f'<table class="insight-table" style="margin-top: 4px;">'
+            f'<tr><td class="lbl" style="font-size: 20px;">📦 Face Box</td><td class="val" style="font-size: 20px; color: #06b6d4;">{rect_html}</td></tr>'
+            f'</table>'
+            f'<div style="font-size: 20px; color: {text_sec}; font-style: italic; margin-top: 4px;">📐 Head pose restricted</div>'
+        )
  
-    return f"""
-<div style="border-bottom: 1px solid {border_color}; padding-bottom: 16px; margin-bottom: 16px;">
+    return f"""<div style="border-bottom: 1px solid {border_color}; padding-bottom: 16px; margin-bottom: 16px;">
 <div class="insight-face-title" style="font-size: 24px; margin-bottom: 12px;">Face {idx}</div>
 <div style="background-color: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 8px; padding: 12px; margin-bottom: 16px;">
 <div style="font-size: 24px; font-weight: bold; color: #8b5cf6; display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
@@ -1630,9 +1614,7 @@ def render_face_details(idx, face):
     </tr>
 </table>
 <div style="font-size: 24px; font-weight: bold; color: #ec4899; margin-top: 14px; margin-bottom: 8px;">📐 Orientation</div>
-{head_pose_html}
-</div>
-"""
+{head_pose_html}</div>"""
 
 # Helper to render dynamic insight cards based on Face API output
 def render_insight_card(photo_dict):
