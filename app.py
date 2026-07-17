@@ -13,9 +13,18 @@ from azure.storage.blob import BlobServiceClient
 env_path = Path(__file__).parent / ".env"
 load_dotenv(dotenv_path=env_path)
 
-FACE_ENDPOINT = os.getenv("FACE_API_ENDPOINT")
-FACE_KEY = os.getenv("FACE_API_KEY")
-BLOB_CONN_STR = os.getenv("BLOB_CONNECTION_STRING")
+# Retrieve credentials safely (looks up Streamlit Secrets first, then falls back to local environment variables)
+def get_config_value(key):
+    try:
+        if key in st.secrets:
+            return st.secrets[key]
+    except Exception:
+        pass
+    return os.getenv(key)
+
+FACE_ENDPOINT = get_config_value("FACE_API_ENDPOINT")
+FACE_KEY = get_config_value("FACE_API_KEY")
+BLOB_CONN_STR = get_config_value("BLOB_CONNECTION_STRING")
 CONTAINER_NAME = "photo-uploads"
 
 # Page config for high-end feel
