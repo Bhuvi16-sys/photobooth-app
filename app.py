@@ -324,6 +324,193 @@ def simulate_gated_attributes(face_idx, image_bytes, real_attrs):
         "facialHair": facial_hair
     }
 
+_AGE_NET = None
+
+def predict_gated_attributes_with_deepface(image_bytes, face_idx, azure_rect, simulated_fallback):
+    """
+    Predicts real face age using a lightweight OpenCV DNN model.
+    Uses YCrCb lighting normalization, dual horizontal flips, and 
+    color-histogram cosine similarity identity smoothing.
+    
+    NOTE: OpenCV's age model has an inherent ~±6-8 year margin of error, 
+    so this should be treated as an estimate rather than ground truth.
+    """
+    import os
+    import sys
+    import urllib.request
+    import numpy as np
+    import cv2
+    import streamlit as st
+    from pathlib import Path
+    
+    # 1. Setup local models directory and download files on first run
+    models_dir = Path(__file__).parent / "models"
+    os.makedirs(models_dir, exist_ok=True)
+    
+    prototxt_path = models_dir / "age_deploy.prototxt"
+    model_path = models_dir / "age_net.caffemodel"
+    
+    try:
+        # Download files if they do not exist
+        if not prototxt_path.exists():
+            url = "https://raw.githubusercontent.com/spmallick/learnopencv/master/AgeGender/age_deploy.prototxt"
+            urllib.request.urlretrieve(url, str(prototxt_path))
+            
+        if not model_path.exists():
+            url = "https://raw.githubusercontent.com/eveningglow/age-and-gender-classification/master/model/age_net.caffemodel"
+            urllib.request.urlretrieve(url, str(model_path))
+            
+        # 2. Crop the face out of the original image bytes
+        from PIL import Image
+        import io
+        
+        image = Image.open(io.BytesIO(image_bytes))
+        width, height = image.size
+        
+        x = azure_rect.get("left", 0)
+        y = azure_rect.get("top", 0)
+        w = azure_rect.get("width", 0)
+        h = azure_rect.get("height", 0)
+        
+        # Add ~25% padding on each side
+        pad_x = int(w * 0.25)
+        pad_y = int(h * 0.25)
+        
+        left = max(0, x - pad_x)
+        top = max(0, y - pad_y)
+        right = min(width, x + w + pad_x)
+        bottom = min(height, y + h + pad_y)
+        
+        if right > left and bottom > top:
+            cropped_image = image.crop((left, top, right, bottom))
+        else:
+            cropped_image = image
+            
+        # Convert PIL Image to OpenCV BGR numpy array
+        img_np = np.array(cropped_image.convert("RGB"))
+        img_bgr = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
+        
+        # Apply YCrCb color-space histogram equalization for lighting normalization
+        ycrcb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2YCrCb)
+        channels = list(cv2.split(ycrcb))
+        channels[0] = cv2.equalizeHist(channels[0])
+        ycrcb_eq = cv2.merge(channels)
+        img_normalized = cv2.cvtColor(ycrcb_eq, cv2.COLOR_YCrCb2BGR)
+        
+        # Create horizontally-flipped version
+        img_flipped = cv2.flip(img_normalized, 1)
+        
+        # Load Caffe Net (cached globally)
+        global _AGE_NET
+        if _AGE_NET is None:
+            _AGE_NET = cv2.dnn.readNet(str(model_path), str(prototxt_path))
+            
+        # Preprocessing values for Levi/Hassner model
+        # Mean subtraction values: (78.4263377603, 87.7689143744, 114.895847746), swapRB=True (since model expects RGB)
+        blob_orig = cv2.dnn.blobFromImage(
+            img_normalized, 
+            scalefactor=1.0, 
+            size=(227, 227), 
+            mean=(78.4263377603, 87.7689143744, 114.895847746), 
+            swapRB=True
+        )
+        
+        blob_flipped = cv2.dnn.blobFromImage(
+            img_flipped, 
+            scalefactor=1.0, 
+            size=(227, 227), 
+            mean=(78.4263377603, 87.7689143744, 114.895847746), 
+            swapRB=True
+        )
+        
+        # 3. Predict age on original
+        _AGE_NET.setInput(blob_orig)
+        preds_orig = _AGE_NET.forward()
+        
+        # Predict age on flipped
+        _AGE_NET.setInput(blob_flipped)
+        preds_flipped = _AGE_NET.forward()
+        
+        # Age brackets mapping
+        AGE_MIDPOINTS = [1.5, 5.0, 10.0, 17.5, 28.5, 40.5, 50.5, 80.0]
+        
+        age_orig = AGE_MIDPOINTS[preds_orig[0].argmax()]
+        age_flipped = AGE_MIDPOINTS[preds_flipped[0].argmax()]
+        
+        # Apply calibration offset (directly hardcoded to -8 years to compensate for model bias)
+        offset = -8
+        
+        # Calculate uncalibrated median and final calibrated median
+        raw_median = float(np.median([age_orig, age_flipped]))
+        age_val = max(1.0, raw_median + offset)
+        
+        # 4. Generate visual feature vector (3D Color Histogram) for identity smoothing
+        hist = cv2.calcHist([img_normalized], [0, 1, 2], None, [8, 8, 8], [0, 256, 0, 256, 0, 256])
+        cv2.normalize(hist, hist)
+        feature_vector = hist.flatten().tolist()
+        
+        # 5. Session-scoped Identity Smoothing
+        if "face_identity_cache" not in st.session_state:
+            st.session_state.face_identity_cache = []
+            
+        def cosine_similarity(u, v):
+            u_arr = np.array(u, dtype=np.float32)
+            v_arr = np.array(v, dtype=np.float32)
+            return np.dot(u_arr, v_arr) / (np.linalg.norm(u_arr) * np.linalg.norm(v_arr))
+            
+        best_match = None
+        max_sim = 0.0
+        
+        for entry in st.session_state.face_identity_cache:
+            sim = cosine_similarity(feature_vector, entry["embedding"])
+            if sim > max_sim:
+                max_sim = sim
+                best_match = entry
+                
+        # For histogram vectors, 0.75+ is a high similarity match
+        if max_sim > 0.75 and best_match is not None:
+            best_match["age_history"].append(age_val)
+            final_age = float(np.mean(best_match["age_history"]))
+            smoothed_count = len(best_match["age_history"])
+            best_match["embedding"] = feature_vector
+            identity_matched = True
+        else:
+            st.session_state.face_identity_cache.append({
+                "embedding": feature_vector,
+                "age_history": [age_val]
+            })
+            final_age = age_val
+            smoothed_count = 1
+            identity_matched = False
+            
+        # Server debug logging
+        print(f"[DEBUG STABILIZATION] Face {face_idx}: raw_age={age_orig:.1f}, flipped_age={age_flipped:.1f}, median_uncalibrated={raw_median:.1f}, offset={offset}, calibrated_median={age_val:.1f}, final_smoothed_age={final_age:.1f}, identity_match={'YES' if identity_matched else 'NO'}, history_size={smoothed_count}", file=sys.stderr)
+        
+        # To maintain local simulated attributes mapping for other properties
+        gender_val = simulated_fallback.get("gender", "Male")
+        smile_val = simulated_fallback.get("smile", 0.1)
+        emotion_val = simulated_fallback.get("emotion", {})
+        hair_val = simulated_fallback.get("hair", {})
+        facial_hair_val = simulated_fallback.get("facialHair", {})
+        
+        return {
+            "age": final_age,
+            "smile": smile_val,
+            "emotion": emotion_val,
+            "hair": hair_val,
+            "facialHair": facial_hair_val,
+            "gender": gender_val,
+            "source": "deepface", # keeps "Model Est." visual tag
+            "smoothed_count": smoothed_count
+        }
+        
+    except Exception as e:
+        # Fall back to simulation only when download or inference fails
+        print(f"[Fallback to Simulation] OpenCV DNN age failed: {type(e).__name__} - {e}", file=sys.stderr)
+        simulated_fallback["source"] = "simulated"
+        simulated_fallback["smoothed_count"] = 0
+        return simulated_fallback
+
 def run_analysis_callback():
     uploaded_file = st.session_state.get("my_uploader")
     if not uploaded_file:
@@ -389,7 +576,9 @@ def run_analysis_callback():
                 attrs = face["faceAttributes"]
                 if "age" not in attrs:
                     simulated = simulate_gated_attributes(idx, uploaded_file.getvalue(), attrs)
-                    attrs.update(simulated)
+                    rect = face.get("faceRectangle", {})
+                    predicted = predict_gated_attributes_with_deepface(uploaded_file.getvalue(), idx, rect, simulated)
+                    attrs.update(predicted)
                     
             st.session_state.history_count += 1
             st.session_state.faces_count += len(results)
@@ -966,6 +1155,8 @@ div.stDownloadButton > button:hover {{
 </style>
 """, unsafe_allow_html=True)
 
+# No sidebar calibration slider active (offset managed directly in-code)
+
 # 1. Top Header Banner
 hcol1, hcol2 = st.columns([0.5, 0.5])
 with hcol1:
@@ -1195,9 +1386,23 @@ def render_face_details(idx, face):
     else:
         emotions_html = f'<div style="font-size: 20px; color: {text_sec}; font-style: italic;">🎭 Emotion data restricted by Azure policy</div>'
  
-    # 2. Demographic & Facial Attributes
-    # Age
-    age_str = f"{int(attrs['age'])} yrs" if "age" in attrs else "Restricted"
+    # Age (annotated with source badge and session smoothing caption)
+    age_str = "Restricted"
+    if "age" in attrs:
+        age_str = f"{int(attrs['age'])} yrs"
+        source = attrs.get("source", "azure")
+        if source == "deepface":
+            badge_html = '<span style="font-size: 14px; background-color: rgba(16, 185, 129, 0.15); color: #10b981; padding: 2px 8px; border-radius: 4px; font-weight: bold; margin-left: 8px; vertical-align: middle;">Model Est.</span>'
+        elif source == "simulated":
+            badge_html = '<span style="font-size: 14px; background-color: rgba(245, 158, 11, 0.15); color: #f59e0b; padding: 2px 8px; border-radius: 4px; font-weight: bold; margin-left: 8px; vertical-align: middle;">Simulated</span>'
+        else:
+            badge_html = '<span style="font-size: 14px; background-color: rgba(99, 102, 241, 0.15); color: #8b5cf6; padding: 2px 8px; border-radius: 4px; font-weight: bold; margin-left: 8px; vertical-align: middle;">Azure AI</span>'
+        age_str += f" {badge_html}"
+        
+        # Add lightweight session-scoped identity smoothing indicator
+        smoothed_count = attrs.get("smoothed_count", 1)
+        if smoothed_count > 1:
+            age_str += f'<div style="font-size: 14px; color: #10b981; margin-top: 4px; font-weight: 500; font-family: \'Outfit\', sans-serif;">🔄 Smoothed over {smoothed_count} photos this session</div>'
     
     # Smile Intensity
     smile_html = ""
