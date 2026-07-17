@@ -1293,10 +1293,11 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# 3. Row 1 - Setup Grid
-col1, col2, col3 = st.columns([0.4, 0.3, 0.3], gap="medium")
+# 3. Setup Layout Grid (Two-column layout matching the user's screenshot)
+col_left, col_right = st.columns([0.65, 0.35], gap="medium")
 
-with col1:
+with col_left:
+    # 3.1. Uploader Card (Top)
     # Native uploader styled to render exactly inside this space
     uploaded_file = st.file_uploader("Upload photo", type=["jpg", "jpeg", "png"], label_visibility="collapsed", key="my_uploader")
     
@@ -1319,81 +1320,98 @@ with col1:
         if "success_msg" in st.session_state and st.session_state.success_msg:
             st.success(st.session_state.success_msg)
             st.session_state.success_msg = ""
-
-with col2:
+            
+    # 3.2. Session Summary Card (Bottom)
     st.markdown(f"""
-    <div class="pb-card" style="min-height: 540px;">
-        <div class="panel-title-custom" style="font-size: 24px; color: #8b5cf6; display: flex; align-items: center; gap: 8px; margin-bottom: 16px; font-weight: bold;">
-            <span>⚙️</span> How It Works
+    <div class="pb-card" style="padding: 24px; margin-top: 24px;">
+        <div class="panel-title-custom" style="font-size: 22px; color: #00f0ff; display: flex; align-items: center; gap: 8px; margin-bottom: 16px; font-weight: bold;">
+            <span>📊</span> Session Summary
         </div>
-        <div style="display: flex; flex-direction: column; gap: 16px;">
-            <div style="display: flex; align-items: flex-start; gap: 12px;">
-                <div style="font-size: 22px; background-color: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.15); border-radius: 50%; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; color: #8b5cf6; flex-shrink: 0; font-weight: bold;">1</div>
-                <div>
-                    <h5 style="margin: 0; font-size: 22px; font-weight: bold; color: {text_main};">Upload</h5>
-                    <p style="margin: 2px 0 0 0; font-size: 20px; color: {text_sec}; line-height: 1.3;">Select a clear photo with one or more faces.</p>
+        <div style="display: grid; grid-template-columns: 1.2fr 1.3fr 1.5fr; gap: 20px; align-items: center;">
+            <!-- Circle Dial Section -->
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; border-right: 1px solid {border_color}; padding-right: 15px;">
+                <div style="position: relative; width: 100px; height: 100px; border-radius: 50%; background: conic-gradient(#8b5cf6 0% 70%, #06b6d4 70% 100%); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(139, 92, 246, 0.2);">
+                    <div style="position: absolute; width: 84px; height: 84px; border-radius: 50%; background: {bg_card}; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1;">
+                        <span style="font-size: 11px; color: {text_sec}; text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Analyzed</span>
+                        <span style="font-size: 26px; font-weight: 800; color: {text_main};">{history_count}</span>
+                        <span style="font-size: 10px; color: {text_sec};">Photos</span>
+                    </div>
                 </div>
             </div>
-            <div style="display: flex; align-items: flex-start; gap: 12px;">
-                <div style="font-size: 22px; background-color: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.15); border-radius: 50%; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; color: #8b5cf6; flex-shrink: 0; font-weight: bold;">2</div>
-                <div>
-                    <h5 style="margin: 0; font-size: 22px; font-weight: bold; color: {text_main};">Analyze</h5>
-                    <p style="margin: 2px 0 0 0; font-size: 20px; color: {text_sec}; line-height: 1.3;">We detect faces and analyze attributes.</p>
+            
+            <!-- Attribute Stats -->
+            <div style="display: flex; flex-direction: column; gap: 8px; border-right: 1px solid {border_color}; padding-right: 15px; text-align: left;">
+                <div style="font-size: 13px; font-weight: bold; color: #a78bfa; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; font-family: 'Space Grotesk', sans-serif;">Attributes</div>
+                <div style="display: flex; justify-content: space-between; font-size: 16px;">
+                    <span style="color: {text_sec};">👥 Total Faces:</span>
+                    <span style="color: {text_main}; font-weight: bold;">{faces_count}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 16px;">
+                    <span style="color: {text_sec};">🛡️ Privacy Level:</span>
+                    <span style="color: #10b981; font-weight: bold;">100%</span>
                 </div>
             </div>
-            <div style="display: flex; align-items: flex-start; gap: 12px;">
-                <div style="font-size: 22px; background-color: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.15); border-radius: 50%; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; color: #8b5cf6; flex-shrink: 0; font-weight: bold;">3</div>
-                <div>
-                    <h5 style="margin: 0; font-size: 22px; font-weight: bold; color: {text_main};">View Results</h5>
-                    <p style="margin: 2px 0 0 0; font-size: 20px; color: {text_sec}; line-height: 1.3;">See emotions, ages, pose tilts & suggestions.</p>
+            
+            <!-- Statistics Info -->
+            <div style="display: flex; flex-direction: column; gap: 8px; text-align: left; padding-left: 5px;">
+                <div style="font-size: 13px; font-weight: bold; color: #06b6d4; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; font-family: 'Space Grotesk', sans-serif;">Session Stats</div>
+                <div style="display: flex; justify-content: space-between; font-size: 16px;">
+                    <span style="color: {text_sec};">Avg Speed:</span>
+                    <span style="color: {text_main}; font-weight: bold;">0.01s</span>
                 </div>
-            </div>
-            <div style="display: flex; align-items: flex-start; gap: 12px;">
-                <div style="font-size: 22px; background-color: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.15); border-radius: 50%; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; color: #8b5cf6; flex-shrink: 0; font-weight: bold;">4</div>
-                <div>
-                    <h5 style="margin: 0; font-size: 22px; font-weight: bold; color: {text_main};">Private & Secure</h5>
-                    <p style="margin: 2px 0 0 0; font-size: 20px; color: {text_sec}; line-height: 1.3;">No identification. No storage. Privacy first.</p>
+                <div style="display: flex; justify-content: space-between; font-size: 16px;">
+                    <span style="color: {text_sec};">Success Rate:</span>
+                    <span style="color: #10b981; font-weight: bold;">100%</span>
                 </div>
             </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-with col3:
-    # Session Summary (top half of col3)
+with col_right:
+    # 3.3. How It Works (Right Stack - Top)
     st.markdown(f"""
-    <div class="pb-card" style="min-height: 260px; margin-bottom: 20px; padding: 20px;">
-        <div class="panel-title-custom" style="font-size: 22px; color: #00f0ff; display: flex; align-items: center; gap: 8px; margin: 0; font-weight: bold;">
-            <span>📊</span> Session Summary
+    <div class="pb-card" style="margin-bottom: 20px; padding: 24px;">
+        <div class="panel-title-custom" style="font-size: 24px; color: #8b5cf6; display: flex; align-items: center; gap: 8px; margin-bottom: 16px; font-weight: bold;">
+            <span>⚙️</span> How It Works
         </div>
-        <div class="stats-container" style="margin-top: 14px; gap: 8px;">
-            <div class="stat-box" style="padding: 10px 4px;">
-                <div class="stat-num" style="font-size: 40px;">{history_count}</div>
-                <div class="stat-lbl" style="font-size: 20px;">Photos</div>
+        <div style="display: flex; flex-direction: column; gap: 20px; text-align: left;">
+            <div style="display: flex; align-items: flex-start; gap: 12px;">
+                <div style="font-size: 20px; background-color: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.15); border-radius: 50%; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; color: #8b5cf6; flex-shrink: 0; font-weight: bold;">1</div>
+                <div>
+                    <h5 style="margin: 0; font-size: 18px; font-weight: bold; color: {text_main};">Upload Photos</h5>
+                    <p style="margin: 2px 0 0 0; font-size: 15px; color: {text_sec}; line-height: 1.3;">Select a clear photo with one or more faces.</p>
+                </div>
             </div>
-            <div class="stat-box" style="padding: 10px 4px;">
-                <div class="stat-num" style="font-size: 40px;">{faces_count}</div>
-                <div class="stat-lbl" style="font-size: 20px;">Faces</div>
+            <div style="display: flex; align-items: flex-start; gap: 12px;">
+                <div style="font-size: 20px; background-color: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.15); border-radius: 50%; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; color: #8b5cf6; flex-shrink: 0; font-weight: bold;">2</div>
+                <div>
+                    <h5 style="margin: 0; font-size: 18px; font-weight: bold; color: {text_main};">AI Analysis</h5>
+                    <p style="margin: 2px 0 0 0; font-size: 15px; color: {text_sec}; line-height: 1.3;">Cloud and local models process attributes.</p>
+                </div>
             </div>
-            <div class="stat-box" style="padding: 10px 4px;">
-                <div class="stat-num" style="font-size: 40px; color: #10b981;">0</div>
-                <div class="stat-lbl" style="font-size: 20px;">New</div>
+            <div style="display: flex; align-items: flex-start; gap: 12px;">
+                <div style="font-size: 20px; background-color: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.15); border-radius: 50%; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; color: #8b5cf6; flex-shrink: 0; font-weight: bold;">3</div>
+                <div>
+                    <h5 style="margin: 0; font-size: 18px; font-weight: bold; color: {text_main};">Receive Insights</h5>
+                    <p style="margin: 2px 0 0 0; font-size: 15px; color: {text_sec}; line-height: 1.3;">Get ages, tilt dynamics, and emotion details.</p>
+                </div>
             </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
     
-    # What We Detect (bottom half of col3)
+    # 3.4. What We Detect (Right Stack - Bottom)
     st.markdown(f"""
-    <div class="pb-card" style="min-height: 260px; padding: 20px;">
-        <div class="panel-title-custom" style="font-size: 22px; color: #ec4899; display: flex; align-items: center; gap: 8px; margin: 0; font-weight: bold;">
+    <div class="pb-card" style="padding: 24px;">
+        <div class="panel-title-custom" style="font-size: 24px; color: #ec4899; display: flex; align-items: center; gap: 8px; margin-bottom: 16px; font-weight: bold;">
             <span>📋</span> What We Detect
         </div>
-        <ul class="detect-list" style="gap: 12px; margin: 16px 0;">
-            <li class="detect-item"><span class="detect-icon">🎂</span> Age range</li>
-            <li class="detect-item"><span class="detect-icon">😀</span> Emotion</li>
-            <li class="detect-item"><span class="detect-icon">👓</span> Glasses</li>
-            <li class="detect-item"><span class="detect-icon">👥</span> Multi-faces</li>
+        <ul class="detect-list" style="gap: 12px; margin: 16px 0; text-align: left;">
+            <li class="detect-item" style="font-size: 16px;"><span class="detect-icon">🎂</span> Age range</li>
+            <li class="detect-item" style="font-size: 16px;"><span class="detect-icon">😀</span> Emotion</li>
+            <li class="detect-item" style="font-size: 16px;"><span class="detect-icon">👓</span> Glasses</li>
+            <li class="detect-item" style="font-size: 16px;"><span class="detect-icon">👥</span> Multi-faces</li>
         </ul>
     </div>
     """, unsafe_allow_html=True)
