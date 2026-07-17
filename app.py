@@ -634,7 +634,7 @@ st.markdown(f"""
 }}
 
 /* Full-screen background iframe styling */
-iframe[title="streamlit.components.v1.html"] {{
+div[data-testid="stHtml"] iframe {{
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
@@ -1500,12 +1500,12 @@ components.html(f"""
 
     const resize = () => {{
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
-        const width = window.innerWidth;
-        const height = window.innerHeight;
-        canvas.width = Math.max(1, Math.floor(width * dpr));
-        canvas.height = Math.max(1, Math.floor(height * dpr));
-        gl.viewport(0, 0, canvas.width, canvas.height);
-        gl.uniform2f(locs.res, canvas.width, canvas.height);
+        const w = Math.max(1, Math.floor(window.innerWidth * dpr));
+        const h = Math.max(1, Math.floor(window.innerHeight * dpr));
+        canvas.width = w;
+        canvas.height = h;
+        gl.viewport(0, 0, w, h);
+        gl.uniform2f(locs.res, w, h);
     }};
 
     window.addEventListener("resize", resize);
@@ -1518,6 +1518,17 @@ components.html(f"""
     const startTime = performance.now();
     const render = (now) => {{
         const elapsed = (now - startTime) / 1000;
+        
+        // Auto-detect and sync canvas scale to iframe container bounds
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const w = Math.max(1, Math.floor(window.innerWidth * dpr));
+        const h = Math.max(1, Math.floor(window.innerHeight * dpr));
+        if (canvas.width !== w || canvas.height !== h) {{
+            canvas.width = w;
+            canvas.height = h;
+            gl.viewport(0, 0, w, h);
+            gl.uniform2f(locs.res, w, h);
+        }}
         
         gl.clearColor(0, 0, 0, 0);
         gl.clear(gl.COLOR_BUFFER_BIT);
