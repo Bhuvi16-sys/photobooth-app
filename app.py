@@ -9,6 +9,9 @@ from pathlib import Path
 import random
 from azure.storage.blob import BlobServiceClient
 
+# Page config for high-end feel (Must be the absolute first Streamlit command executed)
+st.set_page_config(page_title="PHOTOBOOTH | Face Insights", layout="wide")
+
 # Load environment variables relative to the script's directory
 env_path = Path(__file__).parent / ".env"
 load_dotenv(dotenv_path=env_path)
@@ -16,8 +19,10 @@ load_dotenv(dotenv_path=env_path)
 # Retrieve credentials safely (looks up Streamlit Secrets first, then falls back to local environment variables)
 def get_config_value(key):
     try:
-        if key in st.secrets:
-            return st.secrets[key]
+        # Only check st.secrets if running on Streamlit Cloud or if a local secrets file is present (avoids local warning banners)
+        if os.getenv("STREAMLIT_RUNTIME_IS_SHARING") or os.path.exists(".streamlit/secrets.toml") or os.path.exists(os.path.expanduser("~/.streamlit/secrets.toml")):
+            if key in st.secrets:
+                return st.secrets[key]
     except Exception:
         pass
     return os.getenv(key)
@@ -26,9 +31,6 @@ FACE_ENDPOINT = get_config_value("FACE_API_ENDPOINT")
 FACE_KEY = get_config_value("FACE_API_KEY")
 BLOB_CONN_STR = get_config_value("BLOB_CONNECTION_STRING")
 CONTAINER_NAME = "photo-uploads"
-
-# Page config for high-end feel
-st.set_page_config(page_title="PHOTOBOOTH | Face Insights", layout="wide")
 
 # Initialize session state variables safely
 theme = "dark"
