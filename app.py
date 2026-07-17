@@ -1159,42 +1159,108 @@ div.stDownloadButton > button:hover {{
         font-size: 14px !important;
     }}
 }}
+
+/* Glassmorphic Navigation Bar Style Override */
+div[data-testid="stAppViewContainer"] div[data-testid="stHorizontalBlock"]:first-of-type {{
+    background: rgba(255, 255, 255, 0.02) !important;
+    backdrop-filter: blur(24px) !important;
+    -webkit-backdrop-filter: blur(24px) !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.06) !important;
+    border-radius: 20px !important;
+    padding: 16px 28px !important;
+    margin-top: 10px !important;
+    margin-bottom: 30px !important;
+    box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.25) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+}}
+
+/* Align child column blocks to center vertically */
+div[data-testid="stAppViewContainer"] div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"] {{
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}}
+
+/* Glassmorphic Theme Toggle Button Override */
+.theme-btn-navbar .stButton > button {{
+    background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%) !important;
+    color: white !important;
+    border: 1.5px solid rgba(96, 165, 250, 0.6) !important;
+    border-radius: 12px !important;
+    padding: 4px 12px !important;
+    height: 48px !important;
+    width: 80px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.45) !important;
+    transition: all 0.3s ease !important;
+}}
+.theme-btn-navbar .stButton > button:hover {{
+    box-shadow: 0 0 25px rgba(59, 130, 246, 0.75) !important;
+    transform: translateY(-1px) !important;
+    border-color: #93c5fd !important;
+}}
+.theme-btn-navbar .stButton > button div {{
+    white-space: pre-wrap !important;
+    line-height: 1.25 !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.5px !important;
+    font-family: 'Outfit', sans-serif !important;
+}}
 </style>
 """, unsafe_allow_html=True)
 
 # No sidebar controls active
 
 # 1. Top Header Banner
-hcol1, hcol2 = st.columns([0.5, 0.5])
+hcol1, hcol2, hcol3, hcol4 = st.columns([0.45, 0.22, 0.23, 0.1])
 with hcol1:
     st.markdown(f"""
-    <div style="display: flex; align-items: center; gap: 16px; min-height: 64px; height: auto; padding: 4px 0; flex-wrap: wrap;">
-        <div style="font-size: 32px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(59, 130, 246, 0.15) 100%); border: 1.5px solid rgba(99, 102, 241, 0.3); padding: 8px 14px; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);">📸</div>
-        <div>
-            <h1 style="margin: 0; font-size: 38px; font-weight: 800; font-family: 'Space Grotesk', sans-serif; letter-spacing: 2px; color: #8b5cf6; line-height: 1.1;">PHOTOBOOTH</h1>
-            <div style="font-size: 20px; color: {text_sec}; margin-top: 3px; font-family: 'Outfit', sans-serif; font-weight: 500; letter-spacing: 0.5px;">Fun Face Insights</div>
+    <div style="display: flex; align-items: center; gap: 14px;">
+        <div style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px; background: rgba(139, 92, 246, 0.1); border: 1.5px solid rgba(139, 92, 246, 0.35); box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                <circle cx="12" cy="13" r="4"></circle>
+            </svg>
+        </div>
+        <div style="display: flex; flex-direction: column; justify-content: center; line-height: 1.1; text-align: left;">
+            <span style="font-size: 13px; font-weight: 600; color: #94a3b8; font-family: 'Outfit', sans-serif; letter-spacing: 0.5px;">FlashPoint Pro</span>
+            <span style="font-size: 22px; font-weight: 800; color: #ffffff; font-family: 'Space Grotesk', sans-serif; letter-spacing: 1px; background: linear-gradient(135deg, #ffffff 60%, #cbd5e1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">PHOTOBOOTH</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
-with hcol2:
-    pcol1, pcol2 = st.columns([0.8, 0.2])
-    with pcol1:
-        st.markdown(f"""
-        <div class="privacy-badge-container" style="background-color: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.15); padding: 8px 16px; border-radius: 8px; display: flex; align-items: center; gap: 10px; min-height: 54px; height: auto; justify-content: flex-end; margin-left: auto; width: fit-content;">
-            <div style="color: #8b5cf6; font-size: 13px;">🛡️</div>
-            <div style="text-align: left; line-height: 1.2;">
-                <div class="privacy-title" style="font-size: 24px; font-weight: bold; color: {text_main};">Privacy First</div>
-                <div class="privacy-subtitle" style="font-size: 20px; color: {text_sec};">No storage. No identification.</div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-    with pcol2:
-        st.markdown('<div class="theme-btn-wrapper" style="display: flex; justify-content: flex-end; align-items: center; min-height: 54px; height: auto; padding: 4px 0;">', unsafe_allow_html=True)
-        theme_clicked = st.button(theme_icon, key="theme_toggle")
-        st.markdown('</div>', unsafe_allow_html=True)
 
-# Divider line
-st.markdown(f'<div style="border-bottom: 1px solid {border_color}; margin-top: 16px; margin-bottom: 24px;"></div>', unsafe_allow_html=True)
+with hcol2:
+    st.markdown(f"""
+    <div style="display: flex; align-items: center; gap: 10px; height: 44px;">
+        <div style="font-size: 20px; color: #10b981; filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.4));">🛡️</div>
+        <div style="line-height: 1.2; text-align: left;">
+            <div style="font-size: 13px; font-weight: 600; color: #ffffff; font-family: 'Outfit', sans-serif;">Privacy</div>
+            <div style="font-size: 11px; color: #94a3b8; font-family: 'Outfit', sans-serif;">First</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+with hcol3:
+    st.markdown(f"""
+    <div style="display: flex; align-items: center; gap: 10px; height: 44px;">
+        <div style="font-size: 20px; color: #8b5cf6; filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.4));">⚡</div>
+        <div style="line-height: 1.2; text-align: left;">
+            <div style="font-size: 13px; font-weight: 600; color: #ffffff; font-family: 'Outfit', sans-serif;">Real-time</div>
+            <div style="font-size: 11px; color: #94a3b8; font-family: 'Outfit', sans-serif;">Processing</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+with hcol4:
+    st.markdown('<div class="theme-btn-navbar" style="display: flex; align-items: center; justify-content: center; height: 44px;">', unsafe_allow_html=True)
+    theme_clicked = st.button(f"{theme_icon}\nTHEME", key="theme_toggle")
+    st.markdown('</div>', unsafe_allow_html=True)
 
 if theme_clicked:
     st.session_state.theme = "light" if st.session_state.theme == "dark" else "dark"
