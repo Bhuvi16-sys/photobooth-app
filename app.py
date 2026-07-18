@@ -1386,31 +1386,27 @@ div[data-testid="stAppViewContainer"] div[data-testid="stHorizontalBlock"]:first
 
 /* Glassmorphic Theme Toggle Button Override */
 .theme-btn-navbar .stButton > button {{
-    background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%) !important;
-    color: white !important;
-    border: 1.5px solid rgba(96, 165, 250, 0.6) !important;
-    border-radius: 12px !important;
-    padding: 4px 12px !important;
-    height: 48px !important;
-    width: 80px !important;
+    background: {button_theme_bg} !important;
+    color: {button_theme_color} !important;
+    border: 1.5px solid {button_theme_border} !important;
+    border-radius: 50% !important;
+    padding: 0 !important;
+    height: 38px !important;
+    width: 38px !important;
     display: flex !important;
-    flex-direction: column !important;
     align-items: center !important;
     justify-content: center !important;
-    box-shadow: 0 0 15px rgba(59, 130, 246, 0.45) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
     transition: all 0.3s ease !important;
 }}
 .theme-btn-navbar .stButton > button:hover {{
-    box-shadow: 0 0 25px rgba(59, 130, 246, 0.75) !important;
-    transform: translateY(-1px) !important;
-    border-color: #93c5fd !important;
+    box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3) !important;
+    transform: scale(1.05) !important;
+    border-color: #8b5cf6 !important;
 }}
 .theme-btn-navbar .stButton > button div {{
-    white-space: pre-wrap !important;
-    line-height: 1.25 !important;
-    font-size: 10px !important;
+    font-size: 16px !important;
     font-weight: 700 !important;
-    letter-spacing: 0.5px !important;
     font-family: 'Outfit', sans-serif !important;
 }}
 </style>
@@ -1459,8 +1455,8 @@ with hcol3:
     """, unsafe_allow_html=True)
 
 with hcol4:
-    st.markdown('<div class="theme-btn-navbar" style="display: flex; align-items: center; justify-content: center; height: 44px;">', unsafe_allow_html=True)
-    theme_clicked = st.button(f"{theme_icon}\nTHEME", key="theme_toggle")
+    st.markdown('<div class="theme-btn-navbar" style="display: flex; align-items: center; justify-content: flex-end; height: 44px; width: 100%;">', unsafe_allow_html=True)
+    theme_clicked = st.button(f"{theme_icon}", key="theme_toggle")
     st.markdown('</div>', unsafe_allow_html=True)
 
 if theme_clicked:
