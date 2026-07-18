@@ -1758,7 +1758,7 @@ with col_left:
 <span>📊</span> Session Summary
 </div>
 <div style="flex-grow: 1; display: flex; align-items: center; width: 100%;">
-<div style="display: grid; grid-template-columns: 1.2fr 1.3fr 1.5fr; gap: 20px; align-items: center; width: 100%;">
+<div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; align-items: center; width: 100%;">
 <!-- Circle Dial Section -->
 <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; border-right: 1px solid {border_color}; padding-right: 15px;">
 <div style="position: relative; width: 100px; height: 100px; border-radius: 50%; background: conic-gradient(#8b5cf6 0% 70%, #06b6d4 70% 100%); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(139, 92, 246, 0.2);">
@@ -1770,7 +1770,7 @@ with col_left:
 </div>
 </div>
 <!-- Attribute Stats -->
-<div style="display: flex; flex-direction: column; gap: 8px; border-right: 1px solid {border_color}; padding-right: 15px; text-align: left;">
+<div style="display: flex; flex-direction: column; gap: 8px; text-align: left; padding-left: 10px;">
 <div style="font-size: 13px; font-weight: bold; color: #a78bfa; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; font-family: 'Space Grotesk', sans-serif;">Attributes</div>
 <div style="display: flex; justify-content: space-between; font-size: 16px;">
 <span style="color: {text_sec};">👥 Total Faces:</span>
@@ -1779,14 +1779,6 @@ with col_left:
 <div style="display: flex; justify-content: space-between; font-size: 16px;">
 <span style="color: {text_sec};">🛡️ Privacy Level:</span>
 <span style="color: #10b981; font-weight: bold;">100%</span>
-</div>
-</div>
-<!-- Statistics Info -->
-<div style="display: flex; flex-direction: column; gap: 8px; text-align: left; padding-left: 5px;">
-<div style="font-size: 13px; font-weight: bold; color: #06b6d4; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; font-family: 'Space Grotesk', sans-serif;">Session Stats</div>
-<div style="display: flex; justify-content: space-between; font-size: 16px;">
-<span style="color: {text_sec};">Avg Speed:</span>
-<span style="color: {text_main}; font-weight: bold;">0.01s</span>
 </div>
 </div>
 </div>
