@@ -131,14 +131,14 @@ try:
             except Exception:
                 pass
 
-        index_path = Path(__file__).parent.parent / "index.html"
+        index_path = Path(__file__).parent / "index.html"
         try:
             with open(index_path, "r", encoding="utf-8") as f:
                 html_content = f.read()
             
             # Inline local images as Base64 data URLs to bypass Streamlit static files routing constraints
             import base64
-            parent_dir = Path(__file__).parent.parent
+            parent_dir = Path(__file__).parent
             for i in range(1, 7):
                 img_path = parent_dir / "images" / f"portrait_{i}.png"
                 if img_path.exists():

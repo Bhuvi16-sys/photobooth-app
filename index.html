@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Photobooth | Fun Face Insights</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600&family=Space+Grotesk:wght@300;400;500;700&family=Caveat:wght@700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* Global Reset & Base */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      background-color: #0B0B0D;
+      background-image: url('PRISM_BACKGROUND_BASE64');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      color: #F5F4F2;
+      font-family: 'Outfit', sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+    }
+    
+    /* Hero Collage Section */
+    .hero-section {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .collage-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+    
+    /* Photo Card Tile styling */
+    .photo-tile {
+      position: absolute;
+      background-color: #FFFFFF;
+      padding: 10px 10px 30px 10px; /* Polaroid frame style spacing */
+      border-radius: 8px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45);
+      cursor: pointer;
+      pointer-events: auto;
+      transform-style: preserve-3d;
+      user-select: none;
+      transition: box-shadow 0.3s ease;
+    }
+    
+    .photo-tile.animating {
+      transition: left 2.2s cubic-bezier(0.25, 1, 0.28, 1), 
+                  top 2.2s cubic-bezier(0.25, 1, 0.28, 1), 
+                  transform 2.2s cubic-bezier(0.25, 1, 0.28, 1);
+    }
+    
+    .photo-tile:hover {
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+      z-index: 50;
+    }
+    
+    .photo-tile img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 4px;
+      filter: grayscale(15%) contrast(1.05);
+      transition: filter 0.3s ease;
+    }
+    
+    .photo-tile:hover img {
+      filter: grayscale(0%) contrast(1);
+    }
+    
+    /* Polaroid handwritten label badge */
+    .polaroid-badge {
+      position: absolute;
+      bottom: 4px;
+      left: 10px;
+      right: 10px;
+      text-align: center;
+      font-family: 'Caveat', cursive;
+      font-size: 16px;
+      color: #1e1e24;
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity 0.15s ease, transform 0.15s ease;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .photo-tile:hover .polaroid-badge {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    
+    /* Hero Center Text Overlays */
+    .hero-content {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      max-width: 650px;
+      padding: 50px 40px;
+      border-radius: 28px;
+      background: rgba(18, 18, 22, 0.45);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 15px 35px 0 rgba(0, 0, 0, 0.5);
+      pointer-events: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .hero-content h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 64px;
+      font-weight: 300;
+      letter-spacing: -1.5px;
+      line-height: 1.2;
+      color: #F5F4F2;
+      margin-bottom: 20px;
+      min-height: 154px; /* Ensure 2 lines height is reserved to prevent layout shifts */
+    }
+    
+    .cursor {
+      display: inline-block;
+      width: 3px;
+      background-color: #F5F4F2;
+      animation: blink 0.8s infinite;
+      margin-left: 6px;
+      height: 60px;
+      vertical-align: middle;
+    }
+    
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+    
+    .hero-content p {
+      font-size: 18px;
+      font-weight: 300;
+      color: rgba(245, 244, 242, 0.7);
+      margin-bottom: 32px;
+      letter-spacing: 0.2px;
+    }
+    
+    .hero-content a {
+      text-decoration: none;
+    }
+    
+    /* Placeholder buttons kept invisible for spacing in layout */
+    .btn-pill-large {
+      background-color: #F5F4F2;
+      color: #0B0B0D;
+      padding: 16px 36px;
+      border-radius: 100px;
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      border: none;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    
+    @media (max-width: 768px) {
+      .hero-content h1 {
+        font-size: 40px;
+      }
+      .hero-content p {
+        font-size: 16px;
+      }
+    }
+    
+    #bg-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- Dynamic Background Canvas -->
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- Hero Section with Scattered Photo Collage -->
+  <section class="hero-section">
+    <div class="collage-container" id="collage-container">
+      <!-- Photos dynamically generated here -->
+    </div>
+    
+    <div class="hero-content">
+      <h1><span id="typed-text"></span><span class="cursor">|</span></h1>
+      <p>A quick, honest read on the face in front of you.</p>
+      <button class="btn-pill-large">TRY NOW!!!</button>
+    </div>
+  </section>
+
+  <script>
+    // JS Array of Photo Tiles (used for collage and dynamic components)
+    const photos = [
+      { imageUrl: 'PORTRAIT_1_BASE64', age: 24, emotion: 'happy' },
+      { imageUrl: 'PORTRAIT_2_BASE64', age: 41, emotion: 'surprised' },
+      { imageUrl: 'PORTRAIT_3_BASE64', age: 62, emotion: 'thoughtful' },
+      { imageUrl: 'PORTRAIT_4_BASE64', age: 27, emotion: 'cheerful' },
+      { imageUrl: 'PORTRAIT_5_BASE64', age: 29, emotion: 'focused' },
+      { imageUrl: 'PORTRAIT_6_BASE64', age: 58, emotion: 'joyful' },
+      { imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=300&auto=format&fit=crop', age: 22, emotion: 'happy' },
+      { imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=300&auto=format&fit=crop', age: 28, emotion: 'thoughtful' },
+      { imageUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=300&auto=format&fit=crop', age: 26, emotion: 'joy' },
+      { imageUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=300&auto=format&fit=crop', age: 31, emotion: 'neutral' },
+      { imageUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=300&auto=format&fit=crop', age: 24, emotion: 'focused' },
+      { imageUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=300&auto=format&fit=crop', age: 35, emotion: 'neutral' },
+      { imageUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=300&auto=format&fit=crop', age: 23, emotion: 'happy' },
+      { imageUrl: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?q=80&w=300&auto=format&fit=crop', age: 25, emotion: 'excited' }
+    ];
+
+    const isMobile = window.innerWidth <= 768;
+    const isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    
+    // 1. Build Scattered Photo Collage
+    const collageContainer = document.getElementById('collage-container');
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    
+    // Balanced Jittered Grid Distribution (symmetric ratio both sides)
+    const countPerSide = isMobile ? 3 : 5; 
+    const tileInstances = [];
+    const positions = [];
+    
+    const cardBaseWidth = isMobile ? 110 : 145;
+    
+    // Define strict boundaries to keep center clear and balance side visual weight
+    const leftMinX = isMobile ? 15 : 45;
+    const leftMaxX = isMobile ? (width / 2 - 110) : (width / 2 - 300);
+    
+    const rightMinX = isMobile ? (width / 2 + 110) : (width / 2 + 300);
+    const rightMaxX = isMobile ? (width - 125) : (width - 195);
+    
+    const minY = 80;
+    const maxY = height - 120;
+    const rowHeight = (maxY - minY) / countPerSide;
+    
+    // Generate Left Side positions (evenly distributed down rows)
+    for (let r = 0; r < countPerSide; r++) {
+      const tileWidth = cardBaseWidth + (Math.random() - 0.5) * (isMobile ? 10 : 30);
+      const tileHeight = tileWidth * 1.25;
+      
+      const rowCenterY = minY + (r + 0.5) * rowHeight;
+      const y = rowCenterY - tileHeight / 2 + (Math.random() - 0.5) * (rowHeight * 0.25);
+      const x = leftMinX + Math.random() * Math.max(leftMaxX - leftMinX - tileWidth, 10);
+      
+      positions.push({ x, y, w: tileWidth, h: tileHeight });
+    }
+    
+    // Generate Right Side positions (evenly distributed down rows)
+    for (let r = 0; r < countPerSide; r++) {
+      const tileWidth = cardBaseWidth + (Math.random() - 0.5) * (isMobile ? 10 : 30);
+      const tileHeight = tileWidth * 1.25;
+      
+      const rowCenterY = minY + (r + 0.5) * rowHeight;
+      const y = rowCenterY - tileHeight / 2 + (Math.random() - 0.5) * (rowHeight * 0.25);
+      const x = rightMinX + Math.random() * Math.max(rightMaxX - rightMinX - tileWidth, 10);
+      
+      positions.push({ x, y, w: tileWidth, h: tileHeight });
+    }
+    
+    // Heart Shape Coordinate Math
+    function getHeartPosition(index, total, scale, cardW, cardH) {
+      // Offset starting angle so it centers symmetrically
+      const t = (index / total) * 2 * Math.PI - Math.PI / 2;
+      const xVal = 16 * Math.pow(Math.sin(t), 3);
+      const yVal = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
+      
+      const centerX = window.innerWidth / 2;
+      const centerY = window.innerHeight / 2 - 20;
+      
+      return {
+        x: centerX + (xVal * scale) - (cardW / 2),
+        y: centerY - (yVal * scale) - (cardH / 2)
+      };
+    }
+
+    const heartScale = isMobile ? 6.5 : 13.5;
+
+    // Render Tiles initially in a Heart layout
+    for (let i = 0; i < positions.length; i++) {
+      const data = photos[i % photos.length];
+      const pos = positions[i];
+      
+      const tile = document.createElement('div');
+      tile.className = 'photo-tile animating';
+      
+      const cardWidth = pos.w;
+      const cardHeight = pos.h;
+      
+      tile.style.width = `${cardWidth}px`;
+      tile.style.height = `${cardHeight}px`;
+      
+      // Starting heart shape position
+      const heartPos = getHeartPosition(i, positions.length, heartScale, cardWidth, cardHeight);
+      tile.style.left = `${heartPos.x}px`;
+      tile.style.top = `${heartPos.y}px`;
+      
+      // Tangential rotation to follow the curve line
+      const angle = (i / positions.length) * 2 * Math.PI;
+      const deg = (angle * 180 / Math.PI) - 90;
+      tile.style.transform = `rotate(${deg}deg) scale(1)`;
+      
+      tile.innerHTML = `
+        <img src="${data.imageUrl}" alt="calibration profile" onerror="this.src='https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=300&auto=format&fit=crop'">
+        <div class="polaroid-badge">${data.age} &middot; ${data.emotion}</div>
+      `;
+      
+      collageContainer.appendChild(tile);
+      tileInstances.push({
+        element: tile,
+        finalX: pos.x,
+        finalY: pos.y,
+        finalRot: -5 + Math.random() * 10,
+        width: cardWidth,
+        height: cardHeight
+      });
+    }
+    
+    // Trigger separating transition from Heart to Discrete spread
+    let transitionDone = false;
+    
+    setTimeout(() => {
+      tileInstances.forEach(tileData => {
+        const el = tileData.element;
+        el.style.left = `${tileData.finalX}px`;
+        el.style.top = `${tileData.finalY}px`;
+        el.style.transform = `rotate(${tileData.finalRot}deg)`;
+        
+        el.dataset.baseRotation = tileData.finalRot;
+        el.dataset.x = tileData.finalX + tileData.width / 2;
+        el.dataset.y = tileData.finalY + tileData.height / 2;
+      });
+      
+      // Once CSS transition completes, remove animating class to let JS handle smooth updates
+      setTimeout(() => {
+        tileInstances.forEach(tileData => {
+          tileData.element.classList.remove('animating');
+        });
+        transitionDone = true;
+      }, 2200);
+      
+    }, 2400); // 2.4s total delay
+    
+    // Spring Physics Easing Variables for Mousemove Parallax
+    let mouse = { x: -1000, y: -1000 };
+    
+    if (!isReducedMotion) {
+      window.addEventListener('mousemove', (e) => {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+      });
+      
+      const animateCollage = () => {
+        if (!transitionDone) {
+          requestAnimationFrame(animateCollage);
+          return;
+        }
+        
+        const time = performance.now() * 0.001; // Current time in seconds
+        
+        for (let i = 0; i < tileInstances.length; i++) {
+          const tileData = tileInstances[i];
+          const tile = tileData.element;
+          const tileX = parseFloat(tile.dataset.x);
+          const tileY = parseFloat(tile.dataset.y);
+          const baseRot = parseFloat(tile.dataset.baseRotation);
+          
+          const dx = mouse.x - tileX;
+          const dy = mouse.y - tileY;
+          const distance = Math.hypot(dx, dy);
+          
+          let targetX = 0;
+          let targetY = 0;
+          let targetZ = 0;
+          let targetScale = 1;
+          
+          if (distance < 180) {
+            const factor = (180 - distance) / 180;
+            targetX = -(dx / 18) * factor;
+            targetY = -(dy / 18) * factor;
+            targetZ = 10 * factor;
+            targetScale = 1.04 + (0.04 * factor);
+          }
+          
+          let cx = parseFloat(tile.dataset.cx) || 0;
+          let cy = parseFloat(tile.dataset.cy) || 0;
+          let cz = parseFloat(tile.dataset.cz) || 0;
+          let cs = parseFloat(tile.dataset.cs) || 1;
+          
+          cx += (targetX - cx) * 0.1;
+          cy += (targetY - cy) * 0.1;
+          cz += (targetZ - cz) * 0.1;
+          cs += (targetScale - cs) * 0.1;
+          
+          tile.dataset.cx = cx;
+          tile.dataset.cy = cy;
+          tile.dataset.cz = cz;
+          tile.dataset.cs = cs;
+          
+          // Organic weightless floating physics (asynchronous bobbing, swaying, and tilting)
+          const floatSpeed = 1.2;
+          const floatAmount = 8; // Max displacement in pixels
+          const phase = i * 0.6; // Unique phase shift per card
+          
+          const floatY = Math.sin(time * floatSpeed + phase) * floatAmount;
+          const floatX = Math.cos(time * floatSpeed * 0.8 + phase) * (floatAmount * 0.35);
+          const floatRot = Math.sin(time * floatSpeed * 0.5 + phase) * 1.5; // Gentle tilt swing
+          
+          const finalRot = baseRot + floatRot;
+          const finalX = cx + floatX;
+          const finalY = cy + floatY;
+          
+          tile.style.transform = `rotate(${finalRot}deg) translate3d(${finalX}px, ${finalY}px, ${cz}px) scale(${cs})`;
+        }
+        
+        requestAnimationFrame(animateCollage);
+      };
+      
+      requestAnimationFrame(animateCollage);
+    }
+
+    // Setup background canvas for dynamic sways & ambient particles
+    const bgCanvas = document.getElementById('bg-canvas');
+    const bgCtx = bgCanvas.getContext('2d');
+    
+    let canvasW = bgCanvas.width = window.innerWidth;
+    let canvasH = bgCanvas.height = window.innerHeight;
+    
+    window.addEventListener('resize', () => {
+      canvasW = bgCanvas.width = window.innerWidth;
+      canvasH = bgCanvas.height = window.innerHeight;
+    });
+    
+    // Slow moving ambient glow blobs
+    const blobs = [
+      { x: canvasW * 0.2, y: canvasH * 0.2, vx: 0.25, vy: 0.18, radius: 380, color: 'rgba(99, 102, 241, 0.05)' }, // Indigo
+      { x: canvasW * 0.8, y: canvasH * 0.7, vx: -0.18, vy: -0.22, radius: 420, color: 'rgba(236, 72, 153, 0.04)' } // Warm Pink
+    ];
+    
+    // Film-dust particles drifting upwards
+    const particles = [];
+    const particleCount = isMobile ? 25 : 65;
+    
+    for (let i = 0; i < particleCount; i++) {
+      particles.push({
+        x: Math.random() * canvasW,
+        y: Math.random() * canvasH,
+        size: 0.5 + Math.random() * 1.5,
+        speedY: 0.1 + Math.random() * 0.2,
+        swaySpeed: 0.4 + Math.random() * 0.5,
+        swayAmount: 0.25 + Math.random() * 0.4,
+        phase: Math.random() * Math.PI * 2,
+        alpha: 0.08 + Math.random() * 0.22
+      });
+    }
+    
+    const animateBackground = () => {
+      bgCtx.clearRect(0, 0, canvasW, canvasH);
+      
+      // 1. Draw Ambient Glows
+      blobs.forEach(b => {
+        b.x += b.vx;
+        b.y += b.vy;
+        
+        if (b.x - b.radius < 0 || b.x + b.radius > canvasW) b.vx *= -1;
+        if (b.y - b.radius < 0 || b.y + b.radius > canvasH) b.vy *= -1;
+        
+        const grad = bgCtx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.radius);
+        grad.addColorStop(0, b.color);
+        grad.addColorStop(1, 'rgba(11, 11, 13, 0)');
+        
+        bgCtx.fillStyle = grad;
+        bgCtx.beginPath();
+        bgCtx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+        bgCtx.fill();
+      });
+      
+      // 2. Draw Dust Particles
+      particles.forEach(p => {
+        p.y -= p.speedY;
+        p.x += Math.sin(performance.now() * 0.001 * p.swaySpeed + p.phase) * p.swayAmount;
+        
+        if (p.y < -10) {
+          p.y = canvasH + 10;
+          p.x = Math.random() * canvasW;
+        }
+        if (p.x < -10) p.x = canvasW + 10;
+        if (p.x > canvasW + 10) p.x = -10;
+        
+        bgCtx.fillStyle = `rgba(245, 244, 242, ${p.alpha})`;
+        bgCtx.beginPath();
+        bgCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        bgCtx.fill();
+      });
+      
+      requestAnimationFrame(animateBackground);
+    };
+    
+    animateBackground();
+
+    // Typewriter Text Animation for Two-Line welcome text
+    const headlineElement = document.getElementById('typed-text');
+    const textToType = "Welcome to\nPhotobooth";
+    let typeIndex = 0;
+    
+    function typeHeadline() {
+      if (typeIndex < textToType.length) {
+        const char = textToType.charAt(typeIndex);
+        if (char === '\n') {
+          headlineElement.innerHTML += '<br>';
+        } else {
+          headlineElement.innerHTML += char;
+        }
+        typeIndex++;
+        setTimeout(typeHeadline, 90); // Typing speed
+      } else {
+        // Fade out cursor after completion
+        setTimeout(() => {
+          const cursor = document.querySelector('.cursor');
+          if (cursor) cursor.style.display = 'none';
+        }, 1500);
+      }
+    }
+    
+    // Start typing
+    setTimeout(typeHeadline, 450);
+  </script>
+</body>
+</html>
