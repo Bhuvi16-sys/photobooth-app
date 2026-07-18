@@ -17,6 +17,156 @@ st.set_page_config(page_title="PHOTOBOOTH | Face Insights", layout="wide")
 env_path = Path(__file__).parent / ".env"
 load_dotenv(dotenv_path=env_path)
 
+# Page Selector Routing (Landing page vs. Dashboard)
+def get_query_param(key):
+    try:
+        if hasattr(st, "query_params"):
+            return st.query_params.get(key)
+        elif hasattr(st, "experimental_get_query_params"):
+            vals = st.experimental_get_query_params().get(key, [])
+            return vals[0] if vals else None
+    except Exception:
+        pass
+    return None
+
+try:
+    if "page" not in st.session_state:
+        st.session_state.page = "landing"
+
+    q_page = get_query_param("page")
+    if q_page == "dashboard":
+        st.session_state.page = "dashboard"
+    elif q_page == "landing":
+        st.session_state.page = "landing"
+
+    if st.session_state.page == "landing":
+        st.markdown("""
+            <style>
+            /* Hide Streamlit default decoration elements */
+            header { visibility: hidden !important; }
+            footer { visibility: hidden !important; }
+            [data-testid="stSidebar"] { display: none !important; }
+            
+            /* Make Streamlit container span full screen edge-to-edge and lock height */
+            [data-testid="stAppViewContainer"] {
+                background-color: #0B0B0D !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                overflow: hidden !important;
+            }
+            .block-container {
+                max-width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            iframe {
+                border: none !important;
+                width: 100% !important;
+                height: 100vh !important;
+                background-color: #0B0B0D !important;
+                overflow: hidden !important;
+            }
+            
+            /* Native Streamlit Overlay Center Button - Styled directly */
+            div[data-testid="stAppViewContainer"] button {
+                position: fixed !important;
+                top: calc(50vh + 140px) !important;
+                left: 50% !important;
+                transform: translate(-50%, -50%) !important;
+                z-index: 999999999 !important;
+                
+                background-color: #F5F4F2 !important;
+                color: #0B0B0D !important;
+                border: 1px solid #F5F4F2 !important;
+                font-family: 'Outfit', sans-serif !important;
+                font-weight: 700 !important;
+                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25) !important;
+                transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                padding: 20px 56px !important;
+                font-size: 26px !important;
+                letter-spacing: 0.5px !important;
+                border-radius: 100px !important;
+                height: auto !important;
+                line-height: 1.2 !important;
+            }
+            div[data-testid="stAppViewContainer"] button:hover {
+                background-color: #e5e4e2 !important;
+                border-color: #e5e4e2 !important;
+                color: #0B0B0D !important;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
+            }
+            div[data-testid="stAppViewContainer"] button:active {
+                transform: scale(0.97) translate(-51.5%, -51.5%) !important;
+            }
+            
+            /* Remove block click padding area gaps in Streamlit */
+            div[data-testid="stBtnClickArea"] {
+                padding: 0 !important;
+            }
+            </style>
+        """, unsafe_allow_html=True)
+        
+        # Render native overlay center button
+        hero_clicked = st.button("TRY NOW!!!", key="native_hero_try_now")
+
+        if hero_clicked:
+            st.session_state.page = "dashboard"
+            try:
+                if hasattr(st, "query_params"):
+                    st.query_params["page"] = "dashboard"
+                elif hasattr(st, "experimental_set_query_params"):
+                    st.experimental_set_query_params(page="dashboard")
+            except Exception:
+                pass
+            
+            # Safe Rerun
+            try:
+                if hasattr(st, "rerun"):
+                    st.rerun()
+                elif hasattr(st, "experimental_rerun"):
+                    st.experimental_rerun()
+            except Exception:
+                pass
+
+        index_path = Path(__file__).parent.parent / "index.html"
+        try:
+            with open(index_path, "r", encoding="utf-8") as f:
+                html_content = f.read()
+            
+            # Inline local images as Base64 data URLs to bypass Streamlit static files routing constraints
+            import base64
+            parent_dir = Path(__file__).parent.parent
+            for i in range(1, 7):
+                img_path = parent_dir / "images" / f"portrait_{i}.png"
+                if img_path.exists():
+                    try:
+                        with open(img_path, "rb") as img_file:
+                            encoded_str = base64.b64encode(img_file.read()).decode("utf-8")
+                        html_content = html_content.replace(f"PORTRAIT_{i}_BASE64", f"data:image/png;base64,{encoded_str}")
+                    except Exception:
+                        pass
+            
+            # Inline the dynamic camera refraction prism background
+            bg_path = parent_dir / "images" / "prism_background.png"
+            if bg_path.exists():
+                try:
+                    with open(bg_path, "rb") as bg_file:
+                        bg_encoded = base64.b64encode(bg_file.read()).decode("utf-8")
+                    html_content = html_content.replace("PRISM_BACKGROUND_BASE64", f"data:image/png;base64,{bg_encoded}")
+                except Exception:
+                    pass
+        except Exception:
+            html_content = "<h1>Error loading landing page index.html</h1>"
+            
+        components.html(html_content, height=1000, scrolling=False)
+        st.stop()
+except (KeyError, AttributeError):
+    # Safe fallback if run outside of Streamlit server environment (e.g. CLI imports)
+    pass
+
 # Retrieve credentials safely (looks up Streamlit Secrets first, then falls back to local environment variables)
 def get_config_value(key):
     try:
@@ -89,21 +239,21 @@ if theme == "light":
     nav_text_sec = "#475569"
     nav_shadow = "0 8px 32px 0 rgba(15, 23, 42, 0.08)"
 else:
-    bg_app = "#090f1e" # Dark navy slate blue base
-    bg_app_grad = "radial-gradient(circle at 0% 0%, rgba(6, 182, 212, 0.12), transparent 40%), radial-gradient(circle at 0% 100%, rgba(139, 92, 246, 0.15), transparent 45%)"
-    bg_card = "#0e162b"
-    border_color = "#1d2d54"
+    bg_app = "#060608" # Dark charcoal black base
+    bg_app_grad = "linear-gradient(135deg, #050507 0%, #111115 50%, #050507 100%)"
+    bg_card = "rgba(22, 22, 26, 0.45)"
+    border_color = "rgba(255, 255, 255, 0.08)"
     text_main = "#ffffff"
     text_sec = "#cbd5e1"
-    bg_dropzone = "#0b1122"
-    border_dropzone = "#1d2d54"
-    bg_stat_box = "#121e3d"
-    bg_flow_container = "#0e162b"
-    bg_callout = "#0b1226"
-    border_callout = "#1d2d54"
+    bg_dropzone = "rgba(255, 255, 255, 0.02)"
+    border_dropzone = "rgba(255, 255, 255, 0.08)"
+    bg_stat_box = "rgba(255, 255, 255, 0.03)"
+    bg_flow_container = "rgba(22, 22, 26, 0.35)"
+    bg_callout = "rgba(255, 255, 255, 0.02)"
+    border_callout = "rgba(255, 255, 255, 0.06)"
     theme_icon = "☀️" # Click to go light
-    button_theme_bg = "#0d1120"
-    button_theme_border = "#1c223c"
+    button_theme_bg = "rgba(255, 255, 255, 0.02)"
+    button_theme_border = "rgba(255, 255, 255, 0.08)"
     button_theme_color = "#cbd5e1"
     footer_sub_border = "rgba(255, 255, 255, 0.03)"
     
@@ -689,17 +839,19 @@ h1 a:not([href^="#"]), h2 a:not([href^="#"]), h3 a:not([href^="#"]), h4 a:not([h
 
 /* Custom Cards styling */
 .pb-card, div[data-testid="stFileUploader"] {{
-    background-color: {bg_card};
-    border: 1px solid {border_color};
-    border-radius: 16px;
-    padding: 28px;
-    min-height: 380px;
-    height: auto;
-    color: {text_main};
-    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+    background-color: {bg_card} !important;
+    border: 1px solid {border_color} !important;
+    border-radius: 16px !important;
+    padding: 28px !important;
+    min-height: 380px !important;
+    height: auto !important;
+    color: {text_main} !important;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.3) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
 }}
 
 /* Custom styled Streamlit file uploader dropzone override */
@@ -780,11 +932,13 @@ h1 a:not([href^="#"]), h2 a:not([href^="#"]), h3 a:not([href^="#"]), h4 a:not([h
     margin-bottom: 14px;
 }}
 .stat-box {{
-    background-color: {bg_stat_box};
-    border: 1px solid {border_color};
-    border-radius: 10px;
-    padding: 16px 8px;
-    text-align: center;
+    background-color: {bg_stat_box} !important;
+    border: 1px solid {border_color} !important;
+    border-radius: 10px !important;
+    padding: 16px 8px !important;
+    text-align: center !important;
+    backdrop-filter: blur(10px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(180%) !important;
 }}
 .stat-num {{
     font-size: 40px;
@@ -801,14 +955,16 @@ h1 a:not([href^="#"]), h2 a:not([href^="#"]), h3 a:not([href^="#"]), h4 a:not([h
 
 /* Step Flow Row */
 .flow-container {{
-    background-color: {bg_flow_container};
-    border: 1px solid {border_color};
-    border-radius: 16px;
-    padding: 24px 28px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: 32px 0;
+    background-color: {bg_flow_container} !important;
+    border: 1px solid {border_color} !important;
+    border-radius: 16px !important;
+    padding: 24px 28px !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin: 32px 0 !important;
+    backdrop-filter: blur(15px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(15px) saturate(180%) !important;
 }}
 .flow-step {{
     display: flex;
@@ -846,17 +1002,19 @@ h1 a:not([href^="#"]), h2 a:not([href^="#"]), h3 a:not([href^="#"]), h4 a:not([h
 
 /* Recent Insights Cards */
 .insight-card {{
-    background-color: {bg_card};
-    border: 1px solid {border_color};
-    border-radius: 16px;
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    align-items: stretch;
-    min-height: 600px;
-    height: auto;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    background-color: {bg_card} !important;
+    border: 1px solid {border_color} !important;
+    border-radius: 16px !important;
+    padding: 24px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 20px !important;
+    align-items: stretch !important;
+    min-height: 600px !important;
+    height: auto !important;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.3) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
 }}
 .insight-img-wrapper {{
     flex: 0 0 auto;
@@ -939,13 +1097,15 @@ h1 a:not([href^="#"]), h2 a:not([href^="#"]), h3 a:not([href^="#"]), h4 a:not([h
     }}
 }}
 .callout-box {{
-    background-color: {bg_callout};
-    border: 1px solid {border_color};
-    border-radius: 12px;
-    padding: 16px 20px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
+    background-color: {bg_callout} !important;
+    border: 1px solid {border_color} !important;
+    border-radius: 12px !important;
+    padding: 16px 20px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 16px !important;
+    backdrop-filter: blur(10px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(180%) !important;
 }}
 .callout-icon {{
     width: 36px;
